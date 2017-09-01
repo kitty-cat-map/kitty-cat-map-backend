@@ -1,19 +1,21 @@
 
-module Kitty.Api where
+module Kitty.Server.Api where
 
 import Prelude hiding (Handler)
 
 import Data.Aeson
        (FromJSON, ToJSON, Value, parseJSON, toJSON, withText)
 import Data.Aeson.Types (Parser)
-import Data.Char (toLower)
 import Data.Proxy (Proxy(Proxy))
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
 import Servant
-       (Handler, JSON, Post, ServerT, (:>), (:<|>)((:<|>)), serve)
+       (Handler(Handler), JSON, Post, Server, ServerT, (:>), (:<|>)((:<|>)), serve)
 import Servant.Checked.Exceptions
        (Envelope, Throws, pureErrEnvelope, pureSuccEnvelope)
+import Servant.Utils.Enter ((:~>)(NT), enter)
+
+import Kitty.Server.Conf (ServerConf(serverConfPort), serverConfEnv)
 
 type Api = Image
 
@@ -34,34 +36,34 @@ instance FromJSON Err where
   parseJSON = withText "Err" $
     maybe (fail "could not parse as Err") pure . readMay . unpack
 
-serverRoot :: ServerT Api (RIO Config)
+serverRoot :: ServerT Api (RIO ServerConf)
 serverRoot = postImage
 
-postImage :: RIO Config (Envelope '[Err] Int)
+postImage :: RIO ServerConf (Envelope '[Err] Int)
 postImage = pureSuccEnvelope 1
 
-app :: Application
-app = serve (Proxy :: Proxy Api) serverRoot
 
 -- | Create a WAI 'Application' capable of running with Warp.
-app :: Config -> Application
-app config = serve (Proxy :: Proxy API) apiServer
+app :: ServerConf -> Application
+app config = serve (Proxy :: Proxy Api) apiServer
   where
-    apiServer :: Server API
+    apiServer :: Server Api
     apiServer = enter naturalTrans serverRoot
 
-    naturalTrans :: RIO Config :~> Handler
+    naturalTrans :: RIO ServerConf :~> Handler
     naturalTrans = NT transformation
 
     -- This represents a natural transformation from 'MyApiM' to 'Handler'.
     -- This consists of unwrapping the 'MyApiM', running the
-    -- @'ReaderT' 'Config'@, and wrapping the resulting value back up in a
+    -- @'ReaderT' 'ServerConf'@, and wrapping the resulting value back up in a
     -- 'Handler'.
-    transformation :: forall a . RIO Config a -> Handler a
-    transformation = Handler . flip runReaderT config . unMyApiM
+    transformation :: forall a . RIO ServerConf a -> Handler a
+    transformation = Handler . lift . flip runRIO config
 
 port :: Int
 port = 8201
 
 defaultMain :: IO ()
-defaultMain = run port app
+defaultMain = do
+  conf <- serverConfEnv
+  run (serverConfPort conf) $ app conf
