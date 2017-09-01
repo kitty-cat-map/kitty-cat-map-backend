@@ -1,6 +1,8 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Kitty.Db.Geom where
+module Kitty.Db.Geom
+  ( module Database.Postgis
+  ) where
 
 import Data.Binary.Builder (fromLazyByteString)
 import Data.Binary.Get (runGetOrFail)

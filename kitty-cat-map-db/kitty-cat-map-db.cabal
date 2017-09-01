@@ -17,6 +17,8 @@ library
   hs-source-dirs:      src
   exposed-modules:     Kitty.Db
                      , Kitty.Db.Geom
+                     , Kitty.Db.Model
+                     , Kitty.Db.Query
   build-depends:       base-noprelude >= 4.9 && < 5
                      , binary
                      , haskell-postgis

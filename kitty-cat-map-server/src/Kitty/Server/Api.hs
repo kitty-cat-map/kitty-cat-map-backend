@@ -48,7 +48,6 @@ postImage = pureSuccEnvelope 1
 getImage :: RIO ServerConf (Envelope '[Err] Int)
 getImage = pureErrEnvelope Err
 
-
 -- | Create a WAI 'Application' capable of running with Warp.
 app :: ServerConf -> Application
 app config = serve (Proxy :: Proxy Api) apiServer
