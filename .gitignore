@@ -16,3 +16,7 @@ cabal.sandbox.config
 *.hp
 *.eventlog
 .stack-work/
+
+# Ignore the db/ directory being used as a docker volume to hold the postgres
+# DB.
+/docker/db
