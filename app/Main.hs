@@ -1,6 +1,6 @@
 module Main where
 
-import Kitty (defaultMain)
+import Kitty.Server (defaultMain)
 
 main :: IO ()
 main = defaultMain
