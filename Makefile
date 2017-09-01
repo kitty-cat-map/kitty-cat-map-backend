@@ -5,7 +5,7 @@ all: build
 benchmark:
 	stack bench
 
-# Build both hrep and highlight.
+# Build the executables.
 build: 
 	stack build
 
@@ -48,7 +48,7 @@ haddock-server:
 hlint:
 	hlint src/
 
-# Install highlight and hrep to ~/.local/bin/.
+# Install the executables to ~/.local/bin/.
 install:
 	stack install
 
