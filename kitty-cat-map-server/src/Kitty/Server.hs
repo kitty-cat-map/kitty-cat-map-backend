@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-missing-import-lists #-}
 
 module Kitty.Server
   ( module X

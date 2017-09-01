@@ -24,6 +24,7 @@ library
                      , kitty-cat-map-base
                      , kitty-cat-map-db
                      , natural-transformation
+                     , read-env-var
                      , servant
                      , servant-checked-exceptions
                      , servant-server

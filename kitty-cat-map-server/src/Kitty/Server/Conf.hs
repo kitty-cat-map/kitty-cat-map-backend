@@ -2,6 +2,7 @@
 module Kitty.Server.Conf where
 
 import Network.Wai.Handler.Warp (Port)
+import System.ReadEnvVar (readEnvDef)
 
 data ServerConf = ServerConf
   { serverConfPort :: Port
@@ -41,4 +42,9 @@ data ServerConf = ServerConf
 --   pure Config {configPool = pool, configPort = port}
 
 serverConfEnv :: IO ServerConf
-serverConfEnv = undefined
+serverConfEnv = do
+  port <- readEnvDef "PORT" 8080
+  serverConf port
+
+serverConf :: Port -> IO ServerConf
+serverConf port = pure $ ServerConf {serverConfPort = port}
