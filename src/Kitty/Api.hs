@@ -1,13 +1,19 @@
 
 module Kitty.Api where
 
+import Prelude hiding (Handler)
+
+import Data.Aeson
+       (FromJSON, ToJSON, Value, parseJSON, toJSON, withText)
+import Data.Aeson.Types (Parser)
 import Data.Char (toLower)
 import Data.Proxy (Proxy(Proxy))
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
-import Servant (Handler, (:<|>)((:<|>)), ServerT, serve)
+import Servant
+       (Handler, JSON, Post, ServerT, (:>), (:<|>)((:<|>)), serve)
 import Servant.Checked.Exceptions
-       (Envelope, pureErrEnvelope, pureSuccEnvelope)
+       (Envelope, Throws, pureErrEnvelope, pureSuccEnvelope)
 
 type Api = Image
 
@@ -26,13 +32,13 @@ instance ToJSON Err where
 instance FromJSON Err where
   parseJSON :: Value -> Parser Err
   parseJSON = withText "Err" $
-    maybe (fail "could not parse as Err") pure . readMaybe . unpack
+    maybe (fail "could not parse as Err") pure . readMay . unpack
 
 serverRoot :: ServerT Api Handler
 serverRoot = postImage
 
-postImage :: Handler (Envelope '[Err] SearchResponse)
-postImage = pure 1
+postImage :: Handler (Envelope '[Err] Int)
+postImage = pureSuccEnvelope 1
 
 app :: Application
 app = serve (Proxy :: Proxy Api) serverRoot
