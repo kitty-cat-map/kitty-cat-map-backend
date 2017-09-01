@@ -1,4 +1,4 @@
-name:                kitty-cat-map-db
+name:                kitty-cat-map-server
 version:             0.1.0.0
 -- synopsis:
 -- description:
@@ -15,14 +15,19 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Kitty.Db
-                     , Kitty.Db.Geom
+  exposed-modules:     Kitty.Api
   build-depends:       base-noprelude >= 4.9 && < 5
-                     , binary
-                     , haskell-postgis
+                     , aeson
+                     , http-api-data
                      , kitty-cat-map-base
-                     , postgresql-simple
+                     , kitty-cat-map-db
+                     , natural-transformation
+                     , servant
+                     , servant-checked-exceptions
+                     , servant-server
                      , text
+                     , wai
+                     , warp
   default-language:    Haskell2010
   ghc-options:         -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wmissing-import-lists
   default-extensions:  DataKinds

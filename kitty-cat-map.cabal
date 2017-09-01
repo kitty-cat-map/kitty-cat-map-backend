@@ -13,55 +13,12 @@ build-type:          Simple
 extra-source-files:  README.md
 cabal-version:       >=1.10
 
-library
-  hs-source-dirs:      src
-  exposed-modules:     Kitty
-                     , Kitty.Api
-                     , Kitty.Db
-                     , Kitty.Db.Geom
-                     , Prelude
-  build-depends:       base-noprelude >= 4.9 && < 5
-                     , aeson
-                     , binary
-                     , classy-prelude
-                     , haskell-postgis
-                     , http-api-data
-                     , natural-transformation
-                     , postgresql-simple
-                     , servant
-                     , servant-checked-exceptions
-                     , servant-server
-                     , text
-                     , wai
-                     , warp
-  default-language:    Haskell2010
-  ghc-options:         -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wmissing-import-lists
-  default-extensions:  DataKinds
-                     , DeriveDataTypeable
-                     , DeriveGeneric
-                     , EmptyDataDecls
-                     , FlexibleContexts
-                     , GADTs
-                     , GeneralizedNewtypeDeriving
-                     , InstanceSigs
-                     , MultiParamTypeClasses
-                     , NoMonomorphismRestriction
-                     , OverloadedStrings
-                     , RecordWildCards
-                     , ScopedTypeVariables
-                     , TupleSections
-                     , TypeFamilies
-                     , TypeOperators
-                     , ViewPatterns
-  other-extensions:    QuasiQuotes
-                     , TemplateHaskell
-
 executable kitty-cat-map-exe
   hs-source-dirs:      app
   main-is:             Main.hs
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wmissing-import-lists
-  build-depends:       base-noprelude
-                     , kitty-cat-map
+  build-depends:       base-noprelude >= 4.9 && < 5
+                     , kitty-cat-map-server
   default-language:    Haskell2010
 
 test-suite kitty-cat-map-test
