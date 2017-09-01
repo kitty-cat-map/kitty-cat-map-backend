@@ -1,8 +1,6 @@
 
 module Kitty.Server.Api where
 
-import Prelude hiding (Handler)
-
 import Data.Aeson
        (FromJSON, ToJSON, Value, parseJSON, toJSON, withText)
 import Data.Aeson.Types (Parser)
@@ -10,7 +8,8 @@ import Data.Proxy (Proxy(Proxy))
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
 import Servant
-       (Handler(Handler), JSON, Post, Server, ServerT, (:>), (:<|>)((:<|>)), serve)
+       (JSON, Post, Server, ServerT, (:>), (:<|>)((:<|>)), serve)
+import qualified Servant as Servant
 import Servant.Checked.Exceptions
        (Envelope, Throws, pureErrEnvelope, pureSuccEnvelope)
 import Servant.Utils.Enter ((:~>)(NT), enter)
@@ -19,9 +18,13 @@ import Kitty.Server.Conf (ServerConf(serverConfPort), serverConfEnv)
 
 type Api = Image
 
-type Image = "image" :> PostImage
+type Image = "image" :> (PostImage :<|> GetImage)
 
 type PostImage =
+  Throws Err :>
+  Post '[JSON] Int
+
+type GetImage =
   Throws Err :>
   Post '[JSON] Int
 
@@ -37,10 +40,13 @@ instance FromJSON Err where
     maybe (fail "could not parse as Err") pure . readMay . unpack
 
 serverRoot :: ServerT Api (RIO ServerConf)
-serverRoot = postImage
+serverRoot = postImage :<|> getImage
 
 postImage :: RIO ServerConf (Envelope '[Err] Int)
 postImage = pureSuccEnvelope 1
+
+getImage :: RIO ServerConf (Envelope '[Err] Int)
+getImage = pureErrEnvelope Err
 
 
 -- | Create a WAI 'Application' capable of running with Warp.
@@ -50,15 +56,15 @@ app config = serve (Proxy :: Proxy Api) apiServer
     apiServer :: Server Api
     apiServer = enter naturalTrans serverRoot
 
-    naturalTrans :: RIO ServerConf :~> Handler
+    naturalTrans :: RIO ServerConf :~> Servant.Handler
     naturalTrans = NT transformation
 
     -- This represents a natural transformation from 'MyApiM' to 'Handler'.
     -- This consists of unwrapping the 'MyApiM', running the
     -- @'ReaderT' 'ServerConf'@, and wrapping the resulting value back up in a
     -- 'Handler'.
-    transformation :: forall a . RIO ServerConf a -> Handler a
-    transformation = Handler . lift . flip runRIO config
+    transformation :: forall a . RIO ServerConf a -> Servant.Handler a
+    transformation = runRIO config
 
 port :: Int
 port = 8201
