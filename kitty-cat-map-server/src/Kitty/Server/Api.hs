@@ -64,10 +64,6 @@ app config = serve (Proxy :: Proxy Api) apiServer
     naturalTrans :: RIO ServerConf :~> Servant.Handler
     naturalTrans = NT transformation
 
-    -- This represents a natural transformation from 'MyApiM' to 'Handler'.
-    -- This consists of unwrapping the 'MyApiM', running the
-    -- @'ReaderT' 'ServerConf'@, and wrapping the resulting value back up in a
-    -- 'Handler'.
     transformation :: forall a . RIO ServerConf a -> Servant.Handler a
     transformation = runRIO config
 
