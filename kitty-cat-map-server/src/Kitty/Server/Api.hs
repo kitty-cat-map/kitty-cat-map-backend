@@ -9,12 +9,13 @@ import Data.Proxy (Proxy(Proxy))
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
 import Servant
-       (JSON, Post, Server, ServerT, (:>), (:<|>)((:<|>)), serve)
+       (Get, JSON, Post, Server, ServerT, (:>), (:<|>)((:<|>)), serve)
 import qualified Servant as Servant
 import Servant.Checked.Exceptions
        (Envelope, Throws, pureErrEnvelope, pureSuccEnvelope)
 import Servant.Utils.Enter ((:~>)(NT), enter)
 
+import Kitty.Db (dbGetImages)
 import Kitty.Server.Conf (ServerConf, mkServerConfEnv, port)
 
 type Api = Image
@@ -27,7 +28,7 @@ type PostImage =
 
 type GetImage =
   Throws Err :>
-  Post '[JSON] Int
+  Get '[JSON] Int
 
 data Err = Err deriving (Eq, Read, Show)
 
@@ -47,7 +48,11 @@ postImage :: RIO ServerConf (Envelope '[Err] Int)
 postImage = pureSuccEnvelope 1
 
 getImage :: RIO ServerConf (Envelope '[Err] Int)
-getImage = pureErrEnvelope Err
+-- getImage = pureErrEnvelope Err
+getImage = do
+  images <- dbGetImages
+  print images
+  pureErrEnvelope Err
 
 -- | Create a WAI 'Application' capable of running with Warp.
 app :: ServerConf -> Application
@@ -69,4 +74,6 @@ app config = serve (Proxy :: Proxy Api) apiServer
 defaultMain :: IO ()
 defaultMain = do
   conf <- mkServerConfEnv
-  run (view port conf) $ app conf
+  let port' = view port conf
+  putStrLn $ "kitty-cat-map running on port " <> tshow port'
+  run port' $ app conf

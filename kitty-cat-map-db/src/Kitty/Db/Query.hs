@@ -20,8 +20,8 @@ runDb f = do
   pool' <- view pool
   withResource pool' f
 
-dbGetImage :: (MonadBaseControl IO m, MonadReader r m, HasPool r) => m [ImageInfo]
-dbGetImage = runDb $ quer_ "SELECT * from image_info"
+dbGetImages :: (MonadBaseControl IO m, MonadReader r m, HasPool r) => m [ImageInfo]
+dbGetImages = runDb $ quer_ "SELECT * from image_info"
 
 quer
   :: (FromRow r, MonadBase IO m, ToRow q)

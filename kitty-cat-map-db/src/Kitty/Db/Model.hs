@@ -9,7 +9,7 @@ data ImageInfo = ImageInfo
   { imageId :: Int64
   , imageFileName :: FilePath
   , imageGeom :: Geometry
-  }
+  } deriving Show
 
 instance FromRow ImageInfo where
   fromRow :: RowParser ImageInfo
