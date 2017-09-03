@@ -28,6 +28,7 @@ library
                      , postgresql-simple
                      , resource-pool
                      , text
+                     , transformers-base
   default-language:    Haskell2010
   ghc-options:         -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wmissing-import-lists
   default-extensions:  DataKinds
