@@ -1,6 +1,7 @@
 
 module Kitty.Server.Api where
 
+import Control.Lens (view)
 import Data.Aeson
        (FromJSON, ToJSON, Value, parseJSON, toJSON, withText)
 import Data.Aeson.Types (Parser)
@@ -14,7 +15,7 @@ import Servant.Checked.Exceptions
        (Envelope, Throws, pureErrEnvelope, pureSuccEnvelope)
 import Servant.Utils.Enter ((:~>)(NT), enter)
 
-import Kitty.Server.Conf (ServerConf(serverConfPort), serverConfEnv)
+import Kitty.Server.Conf (ServerConf, mkServerConfEnv, port)
 
 type Api = Image
 
@@ -65,10 +66,7 @@ app config = serve (Proxy :: Proxy Api) apiServer
     transformation :: forall a . RIO ServerConf a -> Servant.Handler a
     transformation = runRIO config
 
-port :: Int
-port = 8201
-
 defaultMain :: IO ()
 defaultMain = do
-  conf <- serverConfEnv
-  run (serverConfPort conf) $ app conf
+  conf <- mkServerConfEnv
+  run (view port conf) $ app conf

@@ -23,6 +23,7 @@ library
                      , http-api-data
                      , kitty-cat-map-base
                      , kitty-cat-map-db
+                     , lens
                      , natural-transformation
                      , read-env-var
                      , servant
@@ -49,6 +50,7 @@ library
                      , TupleSections
                      , TypeFamilies
                      , TypeOperators
+                     , TypeSynonymInstances
                      , ViewPatterns
   other-extensions:    QuasiQuotes
                      , TemplateHaskell
