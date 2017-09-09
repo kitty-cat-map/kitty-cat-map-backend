@@ -1,6 +1,9 @@
 
+-- Enable the UUID extension.
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 CREATE TABLE IF NOT EXISTS image_info (
-  id SERIAL CONSTRAINT firstkey PRIMARY KEY,
+  id UUID CONSTRAINT firstkey PRIMARY KEY DEFAULT uuid_generate_v4(),
   filename TEXT
   );
 

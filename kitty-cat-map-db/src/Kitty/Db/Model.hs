@@ -1,18 +1,27 @@
 
 module Kitty.Db.Model where
 
+import Data.UUID (UUID)
+import Database.PostgreSQL.Simple.FromField (FromField)
 import Database.PostgreSQL.Simple.FromRow (FromRow, RowParser, fromRow, field)
 
 import Kitty.Db.Geom (Geometry)
 
-data ImageInfo = ImageInfo
-  { imageId :: Int64
+newtype ImageInfoKey = ImageInfoKey { unImageInfoKey :: UUID }
+  deriving (Eq, FromField, Read, Show)
+
+data ImageInfo' key = ImageInfo
+  { imageId :: key
   , imageFileName :: FilePath
   , imageGeom :: Geometry
   } deriving Show
 
-instance FromRow ImageInfo where
-  fromRow :: RowParser ImageInfo
+type ImageInfo = ImageInfo' ImageInfoKey
+
+type ImageInfoData = ImageInfo' ()
+
+instance FromField key => FromRow (ImageInfo' key) where
+  fromRow :: RowParser (ImageInfo' key)
   fromRow =
     ImageInfo
       <$> field
