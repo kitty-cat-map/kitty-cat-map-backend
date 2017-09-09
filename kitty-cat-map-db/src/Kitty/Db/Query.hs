@@ -33,8 +33,13 @@ dbCreateImage
 dbCreateImage ImageInfo {imageFileName, imageGeom} = do
   runDb $
     querS
-      "INSERT INTO image_info (filename, geom) values (?, ?) RETURNING id"
+      -- "INSERT INTO image_info (filename, geom) values (?, ST_SetSRID(ST_POINT(139.839478, 35.652832), 4326)) RETURNING id"
+      -- (Only imageFileName)
+      "INSERT INTO image_info (filename, geom) values (?, ST_GeomFromWKB('?')) RETURNING id"
       (imageFileName, imageGeom)
+
+-- "INSERT INTO image_info (filename, geom) values (?, ?) RETURNING id"
+-- (imageFileName, imageGeom)
 
 quer
   :: (FromRow r, MonadBase IO m, ToRow q)
