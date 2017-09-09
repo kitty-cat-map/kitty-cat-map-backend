@@ -10,10 +10,6 @@ import Kitty.Db.Geom (Geometry)
 newtype ImageInfoKey = ImageInfoKey { unImageInfoKey :: UUID }
   deriving (Eq, FromField, Read, Show)
 
-instance FromRow ImageInfoKey where
-  fromRow :: RowParser ImageInfoKey
-  fromRow = ImageInfoKey <$> field
-
 data ImageInfo' key = ImageInfo
   { imageId :: key
   , imageFileName :: FilePath

@@ -5,7 +5,9 @@ import Control.Lens (view)
 import Control.Monad.Base (liftBase)
 import Data.Pool (withResource)
 import Database.PostgreSQL.Simple
-       (Connection, FromRow, Query, ToRow, formatQuery, query, query_)
+       (Connection, FromRow, Only(Only), Query, ToRow, formatQuery, query,
+        query_)
+import Database.PostgreSQL.Simple.FromField (FromField)
 
 import Kitty.Db.Conf (HasPool(pool))
 import Kitty.Db.Model
@@ -16,12 +18,6 @@ data QueryError = QueryError Text
   deriving (Eq, Read, Show)
 
 instance Exception QueryError
-
--- hello :: IO Int
--- hello = do
---   conn <- connectPostgreSQL ""
---   [Only i] <- query_ conn "select 2 + 2"
---   pure i
 
 runDb :: (MonadBaseControl IO m, MonadReader r m, HasPool r) => (Connection -> m a) -> m a
 runDb f = do
@@ -51,7 +47,7 @@ quer_
 quer_ query' conn = liftBase $ query_ conn query'
 
 querS
-  :: (FromRow r, MonadBase IO m, MonadThrow m, ToRow q)
+  :: (FromField r, MonadBase IO m, MonadThrow m, ToRow q)
   => Query -> q -> Connection -> m r
 querS query' substitution conn = do
   res' <- quer query' substitution conn
@@ -63,7 +59,7 @@ querS query' substitution conn = do
             "received no results from q query that should return only a " <>
             "single result: " <> decodeUtf8 formatted
       throwIO $ QueryError msg
-    [res] -> pure res
+    [Only res] -> pure res
     _ -> do
       formatted <- liftBase fullQueryM
       let msg =
