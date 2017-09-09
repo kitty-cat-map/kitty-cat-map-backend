@@ -21,6 +21,7 @@ library
                      , Kitty.Db.Model
                      , Kitty.Db.Query
   build-depends:       base-noprelude >= 4.9 && < 5
+                     , aeson
                      , binary
                      , haskell-postgis
                      , kitty-cat-map-base

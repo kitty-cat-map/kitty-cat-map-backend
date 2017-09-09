@@ -9,13 +9,16 @@ import Data.Proxy (Proxy(Proxy))
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
 import Servant
-       (Get, JSON, Post, Server, ServerT, (:>), (:<|>)((:<|>)), serve)
+       (Get, JSON, Post, ReqBody, Server, ServerT, (:>), (:<|>)((:<|>)),
+        serve)
 import qualified Servant as Servant
 import Servant.Checked.Exceptions
        (Envelope, Throws, pureErrEnvelope, pureSuccEnvelope)
 import Servant.Utils.Enter ((:~>)(NT), enter)
 
-import Kitty.Db (dbGetImages)
+import Kitty.Db
+       (Geometry, ImageInfo'(ImageInfo), ImageInfoKey, dbCreateImage,
+        dbGetImages)
 import Kitty.Server.Conf (ServerConf, mkServerConfEnv, port)
 
 type Api = Image
@@ -23,8 +26,9 @@ type Api = Image
 type Image = "image" :> (PostImage :<|> GetImage)
 
 type PostImage =
+  ReqBody '[JSON] Geometry :>
   Throws Err :>
-  Post '[JSON] Int
+  Post '[JSON] ImageInfoKey
 
 type GetImage =
   Throws Err :>
@@ -44,11 +48,13 @@ instance FromJSON Err where
 serverRoot :: ServerT Api (RIO ServerConf)
 serverRoot = postImage :<|> getImage
 
-postImage :: RIO ServerConf (Envelope '[Err] Int)
-postImage = pureSuccEnvelope 1
+postImage :: Geometry -> RIO ServerConf (Envelope '[Err] ImageInfoKey)
+postImage geom = do
+  let imageInfo = ImageInfo () "example_filename.jpg" geom
+  imageId <- dbCreateImage imageInfo
+  pureSuccEnvelope imageId
 
 getImage :: RIO ServerConf (Envelope '[Err] Int)
--- getImage = pureErrEnvelope Err
 getImage = do
   images <- dbGetImages
   print images
