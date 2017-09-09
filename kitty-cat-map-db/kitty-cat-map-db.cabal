@@ -42,6 +42,7 @@ library
                      , GeneralizedNewtypeDeriving
                      , InstanceSigs
                      , MultiParamTypeClasses
+                     , NamedFieldPuns
                      , NoMonomorphismRestriction
                      , OverloadedStrings
                      , RecordWildCards
