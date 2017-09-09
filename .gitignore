@@ -17,9 +17,5 @@ cabal.sandbox.config
 *.eventlog
 .stack-work/
 
-# Ignore the db/ directory being used as a docker volume to hold the postgres
-# DB.
-/docker/db
-
 # Ignore tags files created by vim and emacs
 TAGS
