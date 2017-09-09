@@ -1,4 +1,4 @@
-.PHONY: benchmark build clean docker-build docker-up dump-th ghci haddock haddock-server hlint install psql test watch watch-test
+.PHONY: benchmark build clean docker-build docker-up dump-th ghci haddock haddock-server hlint install psql run test watch watch-test
 all: build
 
 # Run the benchmark.
@@ -55,6 +55,9 @@ install:
 # Run psql and connect to the kitty-cat-map database.
 psql:
 	PGPASSWORD=foobar psql -U kitty-cat-map -d kitty-cat-map -h 127.0.0.1
+
+run: build
+	stack exec -- kitty-cat-map-exe
 
 # Run the tests.
 test:
