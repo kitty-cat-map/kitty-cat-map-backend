@@ -17,7 +17,7 @@ import Servant.Checked.Exceptions
 import Servant.Utils.Enter ((:~>)(NT), enter)
 
 import Kitty.Db
-       (Geometry, ImageInfo'(ImageInfo), ImageInfoKey, dbCreateImage,
+       (Geom, ImageInfo'(ImageInfo), ImageInfoKey, dbCreateImage,
         dbGetImages)
 import Kitty.Server.Conf (ServerConf, mkServerConfEnv, port)
 
@@ -26,7 +26,7 @@ type Api = Image
 type Image = "image" :> (PostImage :<|> GetImage)
 
 type PostImage =
-  ReqBody '[JSON] Geometry :>
+  ReqBody '[JSON] Geom :>
   Throws Err :>
   Post '[JSON] ImageInfoKey
 
@@ -48,7 +48,7 @@ instance FromJSON Err where
 serverRoot :: ServerT Api (RIO ServerConf)
 serverRoot = postImage :<|> getImage
 
-postImage :: Geometry -> RIO ServerConf (Envelope '[Err] ImageInfoKey)
+postImage :: Geom -> RIO ServerConf (Envelope '[Err] ImageInfoKey)
 postImage geom = do
   let imageInfo = ImageInfo () "example_filename.jpg" geom
   imageId <- dbCreateImage imageInfo

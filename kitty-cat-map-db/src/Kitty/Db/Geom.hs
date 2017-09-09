@@ -1,45 +1,47 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Kitty.Db.Geom
-  ( module Database.Postgis
-  ) where
+module Kitty.Db.Geom where
 
 import Data.Aeson
        (FromJSON, ToJSON, Value, (.:), (.=), parseJSON, object, toJSON,
         withObject)
 import Data.Aeson.Types (Parser)
-import Data.Binary.Builder (fromLazyByteString)
-import Data.Binary.Get (runGetOrFail)
+import qualified Data.Binary.Builder as Binary
 import Database.PostgreSQL.Simple.FromField
        (Conversion, Field, FromField,
         ResultError(ConversionFailed, UnexpectedNull), fromField,
         returnError)
+import Database.PostgreSQL.Simple.FromRow
+       (FromRow, RowParser, field, fromRow)
 import Database.PostgreSQL.Simple.ToField
        (Action(Plain), ToField, toField)
-import Database.Postgis (Geometry(GeoPoint), Point(Point, _x, _y), writeGeometry)
-import Database.Postgis.Serialize (getGeometry)
+import Database.PostgreSQL.Simple.ToRow (ToRow, toRow)
 
-instance FromField Geometry where
-  fromField :: Field -> Maybe ByteString -> Conversion Geometry
-  fromField field (Just bs) =
-    case runGetOrFail getGeometry (fromStrict bs) of
-      Left (_, _, msg) ->
-        let errMsg = "could not convert Geometry from db: " <> msg
-        in returnError ConversionFailed field errMsg
-      Right (_, _, geom) -> pure geom
-  fromField field Nothing = returnError UnexpectedNull field ""
+data Geom = Geom { geomLat :: Double, geomLon :: Double }
+  deriving (Eq, Read, Show)
 
-instance ToField Geometry where
-  toField  =  Plain . fromLazyByteString . writeGeometry
+instance FromRow Geom where
+  fromRow :: RowParser Geom
+  fromRow = Geom <$> field <*> field
 
-instance FromJSON Geometry where
-  parseJSON :: Value -> Parser Geometry
-  parseJSON = withObject "Geometry" $ \o -> do
+instance ToRow Geom where
+  toRow :: Geom -> [Action]
+  toRow (Geom lat lon) =
+    let latBS = fromPlain $ toField lat
+        lonBS = fromPlain $ toField lon
+    in [Plain $ "ST_SetSRID(ST_POINT(" <> latBS <> ", " <> lonBS <> "), 4326)"]
+    where
+      fromPlain :: Action -> Binary.Builder
+      fromPlain (Plain builder) = builder
+      fromPlain _ = error "Actions of other types are not supported."
+
+instance FromJSON Geom where
+  parseJSON :: Value -> Parser Geom
+  parseJSON = withObject "Geom" $ \o -> do
     lat <- o .: "lat"
     lon <- o .: "lon"
-    pure $ GeoPoint (Just 4326) (Point lat lon Nothing Nothing)
+    pure $ Geom lat lon
 
-instance ToJSON Geometry where
-  toJSON :: Geometry -> Value
-  toJSON (GeoPoint _ Point{_x, _y}) = object ["lat" .= _y, "lon" .= _x]
-  toJSON _ = error "Non GeoPoint values of Geometry are not supported."
+instance ToJSON Geom where
+  toJSON :: Geom -> Value
+  toJSON (Geom lat lon) = object ["lat" .= lat, "lon" .= lon]

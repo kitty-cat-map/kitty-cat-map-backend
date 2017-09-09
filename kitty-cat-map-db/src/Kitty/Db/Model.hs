@@ -6,7 +6,7 @@ import Data.UUID (UUID)
 import Database.PostgreSQL.Simple.FromField (FromField)
 import Database.PostgreSQL.Simple.FromRow (FromRow, RowParser, fromRow, field)
 
-import Kitty.Db.Geom (Geometry)
+import Kitty.Db.Geom (Geom)
 
 newtype ImageInfoKey = ImageInfoKey { unImageInfoKey :: UUID }
   deriving (Eq, FromField, FromJSON, Read, Show, ToJSON)
@@ -14,7 +14,7 @@ newtype ImageInfoKey = ImageInfoKey { unImageInfoKey :: UUID }
 data ImageInfo' key = ImageInfo
   { imageId :: key
   , imageFileName :: FilePath
-  , imageGeom :: Geometry
+  , imageGeom :: Geom
   } deriving Show
 
 type ImageInfo = ImageInfo' ImageInfoKey
@@ -27,4 +27,4 @@ instance FromField key => FromRow (ImageInfo' key) where
     ImageInfo
       <$> field
       <*> field
-      <*> field
+      <*> fromRow
