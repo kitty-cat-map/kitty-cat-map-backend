@@ -23,7 +23,7 @@ import Kitty.Db
        (Geom(Geom), HasPool, ImageInfo'(ImageInfo), ImageInfoKey, Lat(Lat),
         Lon(Lon), dbCreateImage, dbGetImages)
 import Kitty.Server.Conf (ServerConf, mkServerConfEnv, port)
-import Kitty.Server.Img (HasImgDir, copyImg, createImgDir)
+import Kitty.Server.Img (HasImgDir, ImgErr, copyImg, createImgDir)
 
 type Api = Image
 
@@ -31,7 +31,7 @@ type Image = "image" :> (PostImage :<|> GetImage)
 
 type PostImage =
   MultipartForm  PostImageJson :>
-  Throws Err :>
+  Throws ImgErr :>
   Post '[JSON] ImageInfoKey
 
 type GetImage =
@@ -74,11 +74,11 @@ postImage
      , MonadReader r m
      , MonadThrow m
      )
-  => PostImageJson -> m (Envelope '[ Err] ImageInfoKey)
+  => PostImageJson -> m (Envelope '[ImgErr] ImageInfoKey)
 postImage PostImageJson{geom, filename} = do
   eitherImg <- copyImg filename
   case eitherImg of
-    Left _ -> undefined
+    Left imgErr -> pureErrEnvelope imgErr
     Right imgPath -> do
       let imageInfo = ImageInfo () imgPath geom
       imageId <- dbCreateImage imageInfo

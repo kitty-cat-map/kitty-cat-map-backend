@@ -6,6 +6,7 @@ import Control.Lens (Lens', _Wrapped, view)
 import Control.Lens.TH (makeWrapped)
 import Crypto.Hash (Digest, SHA256)
 import Crypto.Hash.Conduit (hashFile)
+import Data.Aeson.TH (defaultOptions, deriveJSON)
 import Data.ByteString (hGet)
 import System.Directory
        (copyFile, createDirectoryIfMissing, doesFileExist)
@@ -28,6 +29,8 @@ data ImgErr
   | ImgErrImgTypeErr
   | ImgErrNotImg
   deriving (Eq, Read, Show)
+
+$(deriveJSON defaultOptions ''ImgErr)
 
 instance Exception ImgErr
 
