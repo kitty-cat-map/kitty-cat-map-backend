@@ -14,11 +14,14 @@ import Servant
 import qualified Servant as Servant
 import Servant.Checked.Exceptions
        (Envelope, Throws, pureErrEnvelope, pureSuccEnvelope)
+import Servant.Multipart
+       (FileData(fdFilePath), FromMultipart(fromMultipart),
+        MultipartData(files), MultipartForm, lookupInput)
 import Servant.Utils.Enter ((:~>)(NT), enter)
 
 import Kitty.Db
-       (Geom, ImageInfo'(ImageInfo), ImageInfoKey, dbCreateImage,
-        dbGetImages)
+       (Geom(Geom), ImageInfo'(ImageInfo), ImageInfoKey, Lat(Lat),
+        Lon(Lon), dbCreateImage, dbGetImages)
 import Kitty.Server.Conf (ServerConf, mkServerConfEnv, port)
 
 type Api = Image
@@ -26,7 +29,7 @@ type Api = Image
 type Image = "image" :> (PostImage :<|> GetImage)
 
 type PostImage =
-  ReqBody '[JSON] Geom :>
+  MultipartForm  PostImageJson :>
   Throws Err :>
   Post '[JSON] ImageInfoKey
 
@@ -45,11 +48,24 @@ instance FromJSON Err where
   parseJSON = withText "Err" $
     maybe (fail "could not parse as Err") pure . readMay . unpack
 
+data PostImageJson = PostImageJson
+  { geom :: Geom
+  , filename :: FilePath
+  }
+
+instance FromMultipart PostImageJson where
+  fromMultipart :: MultipartData -> Maybe PostImageJson
+  fromMultipart multi = do
+    lat <- fmap Lat . readMay =<< lookupInput "lat" multi
+    lon <- fmap Lon . readMay =<< lookupInput "lon" multi
+    tmpFile <- fdFilePath <$> listToMaybe (files multi)
+    pure $ PostImageJson (Geom lat lon) tmpFile
+
 serverRoot :: ServerT Api (RIO ServerConf)
 serverRoot = postImage :<|> getImage
 
-postImage :: Geom -> RIO ServerConf (Envelope '[Err] ImageInfoKey)
-postImage geom = do
+postImage :: PostImageJson -> RIO ServerConf (Envelope '[Err] ImageInfoKey)
+postImage PostImageJson{geom, filename} = do
   let imageInfo = ImageInfo () "example_filename.jpg" geom
   imageId <- dbCreateImage imageInfo
   pureSuccEnvelope imageId

@@ -7,18 +7,23 @@ import Data.Aeson
         withObject)
 import Data.Aeson.Types (Parser)
 import qualified Data.Binary.Builder as Binary
-import Database.PostgreSQL.Simple.FromField
-       (Conversion, Field, FromField,
-        ResultError(ConversionFailed, UnexpectedNull), fromField,
-        returnError)
+import Database.PostgreSQL.Simple.FromField (FromField)
 import Database.PostgreSQL.Simple.FromRow
        (FromRow, RowParser, field, fromRow)
 import Database.PostgreSQL.Simple.ToField
        (Action(Plain), ToField, toField)
 import Database.PostgreSQL.Simple.ToRow (ToRow, toRow)
 
-data Geom = Geom { geomLat :: Double, geomLon :: Double }
-  deriving (Eq, Read, Show)
+newtype Lat = Lat { unLat :: Double }
+  deriving (Eq, FromField, FromJSON, Num, Read, Show, ToField, ToJSON)
+
+newtype Lon = Lon { unLon :: Double }
+  deriving (Eq, FromField, FromJSON, Num, Read, Show, ToField, ToJSON)
+
+data Geom = Geom
+  { geomLat :: {-# UNPACK #-}!Lat
+  , geomLon :: {-# UNPACK #-}!Lon
+  } deriving (Eq, Read, Show)
 
 instance FromRow Geom where
   fromRow :: RowParser Geom

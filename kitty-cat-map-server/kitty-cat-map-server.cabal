@@ -28,6 +28,7 @@ library
                      , read-env-var
                      , servant
                      , servant-checked-exceptions
+                     , servant-multipart
                      , servant-server
                      , text
                      , wai
@@ -43,6 +44,7 @@ library
                      , GeneralizedNewtypeDeriving
                      , InstanceSigs
                      , MultiParamTypeClasses
+                     , NamedFieldPuns
                      , NoMonomorphismRestriction
                      , OverloadedStrings
                      , RecordWildCards
