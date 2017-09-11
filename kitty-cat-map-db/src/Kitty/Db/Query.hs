@@ -1,3 +1,4 @@
+{-# LANGUAGE QuasiQuotes #-}
 
 module Kitty.Db.Query where
 
@@ -8,9 +9,10 @@ import Database.PostgreSQL.Simple
        (Connection, FromRow, Only(Only), Query, ToRow, formatQuery, query,
         query_)
 import Database.PostgreSQL.Simple.FromField (FromField)
+import Database.PostgreSQL.Simple.SqlQQ (sql)
 
 import Kitty.Db.Conf (HasPool(pool))
-import Kitty.Db.Geom (Geom(Geom))
+import Kitty.Db.Geom (Geom(Geom), Lat, Lon)
 import Kitty.Db.Model
        (ImageInfo'(ImageInfo, imageDate, imageFileName, imageGeom), ImageInfo,
         ImageInfoData, ImageInfoKey)
@@ -25,8 +27,29 @@ runDb f = do
   pool' <- view pool
   withResource pool' f
 
-dbGetImages :: (MonadBaseControl IO m, MonadReader r m, HasPool r) => m [ImageInfo]
-dbGetImages = runDb $ quer_ "SELECT id, filename, date, ST_Y(geom), ST_X(geom) FROM image_info"
+dbGetImages
+  :: (MonadBaseControl IO m, MonadReader r m, HasPool r)
+  => m [ImageInfo]
+dbGetImages =
+  runDb $
+  quer_ "SELECT id, filename, date, ST_Y(geom), ST_X(geom) FROM image_info"
+
+dbFindImages
+  :: (MonadBaseControl IO m, MonadReader r m, HasPool r)
+  => Lat -> Lat -> Lon -> Lon -> m [ImageInfo]
+dbFindImages minLat maxLat minLon maxLon = do
+  let q =
+        [sql|
+          SELECT id, filename, "date", ST_Y(geom), ST_X(geom)
+          FROM image_info
+          WHERE
+            lat >= ? AND
+            lat <= ? AND
+            lon >= ? AND
+            lon <= ?
+          ORDER BY date DESC
+          |]
+  runDb $ quer q (minLat, maxLat, minLon, maxLon)
 
 dbCreateImage
   :: (MonadBaseControl IO m, MonadReader r m, MonadThrow m, HasPool r)

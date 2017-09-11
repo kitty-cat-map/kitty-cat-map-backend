@@ -19,7 +19,7 @@ import Servant.Utils.Enter ((:~>)(NT), enter)
 
 import Kitty.Db
        (Geom(Geom), HasPool, ImageInfo'(ImageInfo), ImageInfoKey,
-        dbCreateImage, mkLat, mkLon)
+        dbCreateImage, dbFindImages, mkLat, mkLon)
 import Kitty.Server.Conf (ServerConf, mkServerConfEnv, port)
 import Kitty.Server.Img (HasImgDir, ImgErr, copyImg, createImgDir)
 
@@ -87,11 +87,18 @@ postImage PostImageForm{filename, date, geom} = do
       imageId <- dbCreateImage imageInfo
       pureSuccEnvelope imageId
 
-searchApi :: MonadBaseControl IO m => ServerT SearchApi m
+searchApi
+  :: (HasPool r, MonadBaseControl IO m, MonadIO m, MonadReader r m)
+  => ServerT SearchApi m
 searchApi = getSearchImage
 
-getSearchImage :: MonadBaseControl IO m => m Int
-getSearchImage = pure 3
+getSearchImage
+  :: (HasPool r, MonadBaseControl IO m, MonadIO m, MonadReader r m)
+  => m Int
+getSearchImage = do
+  images <- dbFindImages (-50) 50 0 100
+  print images
+  pure 3
 
 serverRoot
   :: ( HasImgDir r
