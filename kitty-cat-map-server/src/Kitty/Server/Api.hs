@@ -23,6 +23,7 @@ import Kitty.Db
        (Geom(Geom), HasPool, ImageInfo'(ImageInfo), ImageInfoKey, Lat(Lat),
         Lon(Lon), dbCreateImage, dbGetImages)
 import Kitty.Server.Conf (ServerConf, mkServerConfEnv, port)
+import Kitty.Server.Img (createImgDir)
 
 type Api = Image
 
@@ -91,9 +92,10 @@ app config = serve (Proxy :: Proxy Api) apiServer
     transformation :: forall a . RIO ServerConf a -> Servant.Handler a
     transformation = runRIO config
 
-defaultMain :: IO ()
+defaultMain :: MonadIO m => m ()
 defaultMain = do
   conf <- mkServerConfEnv
   let port' = view port conf
+  runReaderT createImgDir conf
   putStrLn $ "kitty-cat-map running on port " <> tshow port'
-  run port' $ app conf
+  liftIO . run port' $ app conf
