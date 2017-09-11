@@ -15,10 +15,40 @@ import Database.PostgreSQL.Simple.ToField
 import Database.PostgreSQL.Simple.ToRow (ToRow, toRow)
 
 newtype Lat = Lat { unLat :: Double }
-  deriving (Eq, FromField, FromJSON, Num, Read, Show, ToField, ToJSON)
+  deriving (Eq, FromField, Num, Read, Show, ToField, ToJSON)
+
+instance FromJSON Lat where
+  parseJSON :: Value -> Parser Lat
+  parseJSON = maybe (fail "Lat out of range") pure . mkLat <=< parseJSON
+
+latMin :: Double
+latMin = -90
+
+latMax :: Double
+latMax = 90
+
+mkLat :: Double -> Maybe Lat
+mkLat lat
+  | lat >= latMin && lat <= latMax = Just $ Lat lat
+  | otherwise = Nothing
 
 newtype Lon = Lon { unLon :: Double }
-  deriving (Eq, FromField, FromJSON, Num, Read, Show, ToField, ToJSON)
+  deriving (Eq, FromField, Num, Read, Show, ToField, ToJSON)
+
+instance FromJSON Lon where
+  parseJSON :: Value -> Parser Lon
+  parseJSON = maybe (fail "Lon out of range") pure . mkLon <=< parseJSON
+
+lonMin :: Double
+lonMin = -180
+
+lonMax :: Double
+lonMax = 180
+
+mkLon :: Double -> Maybe Lon
+mkLon lon
+  | lon >= lonMin && lon <= lonMax = Just $ Lon lon
+  | otherwise = Nothing
 
 data Geom = Geom
   { geomLat :: {-# UNPACK #-}!Lat
