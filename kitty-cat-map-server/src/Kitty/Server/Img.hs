@@ -26,8 +26,14 @@ instance HasImgDir ImgDir where
 
 data ImgErr
   = ImgErrHashErr
+    -- ^ Error when trying to take the hash of the temporary file
   | ImgErrImgTypeErr
+    -- ^ Error when reading the first few bytes of the temporary file to find
+    -- its magic number
   | ImgErrNotImg
+    -- ^ The input file did not have a correct magic number.
+  | ImgErrCouldNotCopy
+    -- ^ Error when trying to copy the temporary file to the images directory.
   deriving (Eq, Read, Show)
 
 $(deriveJSON defaultOptions ''ImgErr)
