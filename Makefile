@@ -1,4 +1,4 @@
-.PHONY: benchmark build clean docker-build docker-up dump-th ghci haddock haddock-server hlint install psql run test watch watch-test
+.PHONY: benchmark build clean docker-build docker-up dump-th ghci haddock haddock-server hlint install psql run tags test watch watch-test
 all: build
 
 # Run the benchmark.
@@ -56,8 +56,13 @@ install:
 psql:
 	PGPASSWORD=foobar psql -U kitty-cat-map -d kitty-cat-map -h 127.0.0.1
 
+# Run the server.
 run: build
 	stack exec -- kitty-cat-map-exe
+
+# Create a TAGS file for use in emacs or vim.
+tags:
+	hasktags --ignore-close-implementation --etags .
 
 # Run the tests.
 test:
