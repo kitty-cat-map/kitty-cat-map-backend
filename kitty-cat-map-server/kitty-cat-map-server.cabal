@@ -21,6 +21,8 @@ library
                      , Kitty.Server.Conf
   build-depends:       base-noprelude >= 4.9 && < 5
                      , aeson
+                     , attoparsec
+                     , attoparsec-iso8601
                      , bytestring
                      , cryptonite
                      , cryptonite-conduit

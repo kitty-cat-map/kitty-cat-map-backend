@@ -2,6 +2,8 @@
 module Kitty.Server.Api where
 
 import Control.Lens (view)
+import Data.Attoparsec.Text (maybeResult, parse)
+import Data.Attoparsec.Time (utcTime)
 import Data.Proxy (Proxy(Proxy))
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
@@ -37,17 +39,22 @@ type GetSearchImage =
   Get '[JSON] Int
 
 data PostImageForm = PostImageForm
-  { geom :: Geom
-  , filename :: FilePath
+  { filename :: FilePath
+  , date :: UTCTime
+  , geom :: Geom
   }
+
+parseDate :: Text -> Maybe UTCTime
+parseDate = maybeResult . parse utcTime 
 
 instance FromMultipart PostImageForm where
   fromMultipart :: MultipartData -> Maybe PostImageForm
   fromMultipart multi = do
+    tmpFile <- fdFilePath <$> listToMaybe (files multi)
+    date <- parseDate =<< lookupInput "date" multi
     lat <- mkLat =<< readMay =<< lookupInput "lat" multi
     lon <- mkLon =<< readMay =<< lookupInput "lon" multi
-    tmpFile <- fdFilePath <$> listToMaybe (files multi)
-    pure $ PostImageForm (Geom lat lon) tmpFile
+    pure $ PostImageForm tmpFile date (Geom lat lon)
 
 imgApi
   :: ( HasImgDir r
@@ -71,12 +78,12 @@ postImage
      , MonadThrow m
      )
   => PostImageForm -> m (Envelope '[ImgErr] ImageInfoKey)
-postImage PostImageForm{geom, filename} = do
+postImage PostImageForm{filename, date, geom} = do
   eitherImg <- copyImg filename
   case eitherImg of
     Left imgErr -> pureErrEnvelope imgErr
     Right imgPath -> do
-      let imageInfo = ImageInfo () imgPath geom
+      let imageInfo = ImageInfo () imgPath date geom
       imageId <- dbCreateImage imageInfo
       pureSuccEnvelope imageId
 

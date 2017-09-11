@@ -14,6 +14,7 @@ newtype ImageInfoKey = ImageInfoKey { unImageInfoKey :: UUID }
 data ImageInfo' key = ImageInfo
   { imageId :: key
   , imageFileName :: FilePath
+  , imageDate :: UTCTime
   , imageGeom :: Geom
   } deriving Show
 
@@ -26,5 +27,6 @@ instance FromField key => FromRow (ImageInfo' key) where
   fromRow =
     ImageInfo
       <$> field
+      <*> field
       <*> field
       <*> fromRow

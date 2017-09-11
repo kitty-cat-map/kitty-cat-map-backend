@@ -12,7 +12,7 @@ import Database.PostgreSQL.Simple.FromField (FromField)
 import Kitty.Db.Conf (HasPool(pool))
 import Kitty.Db.Geom (Geom(Geom))
 import Kitty.Db.Model
-       (ImageInfo'(ImageInfo, imageFileName, imageGeom), ImageInfo,
+       (ImageInfo'(ImageInfo, imageDate, imageFileName, imageGeom), ImageInfo,
         ImageInfoData, ImageInfoKey)
 
 data QueryError = QueryError Text
@@ -26,16 +26,16 @@ runDb f = do
   withResource pool' f
 
 dbGetImages :: (MonadBaseControl IO m, MonadReader r m, HasPool r) => m [ImageInfo]
-dbGetImages = runDb $ quer_ "SELECT id, filename, ST_Y(geom), ST_X(geom) FROM image_info"
+dbGetImages = runDb $ quer_ "SELECT id, filename, date, ST_Y(geom), ST_X(geom) FROM image_info"
 
 dbCreateImage
   :: (MonadBaseControl IO m, MonadReader r m, MonadThrow m, HasPool r)
   => ImageInfoData -> m ImageInfoKey
-dbCreateImage ImageInfo {imageFileName, imageGeom = Geom lat lon} = do
+dbCreateImage ImageInfo {imageFileName, imageDate, imageGeom = Geom lat lon} = do
   runDb $
     querS
-      "INSERT INTO image_info (filename, geom) values (?, ST_SetSRID(ST_POINT(?, ?), 4326)) RETURNING id"
-      (imageFileName, lon, lat)
+      "INSERT INTO image_info (filename, date, lat, lon, geom) values (?, ?, ?, ?, ST_SetSRID(ST_POINT(?, ?), 4326)) RETURNING id"
+      (imageFileName, imageDate, lat, lon, lon, lat)
 
 quer
   :: (FromRow r, MonadBase IO m, ToRow q)
