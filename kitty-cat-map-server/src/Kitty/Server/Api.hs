@@ -20,7 +20,7 @@ import Servant.Multipart
 import Servant.Utils.Enter ((:~>)(NT), enter)
 
 import Kitty.Db
-       (Geom(Geom), ImageInfo'(ImageInfo), ImageInfoKey, Lat(Lat),
+       (Geom(Geom), HasPool, ImageInfo'(ImageInfo), ImageInfoKey, Lat(Lat),
         Lon(Lon), dbCreateImage, dbGetImages)
 import Kitty.Server.Conf (ServerConf, mkServerConfEnv, port)
 
@@ -64,7 +64,9 @@ instance FromMultipart PostImageJson where
 serverRoot :: ServerT Api (RIO ServerConf)
 serverRoot = postImage :<|> getImage
 
-postImage :: PostImageJson -> RIO ServerConf (Envelope '[Err] ImageInfoKey)
+postImage
+  :: (HasPool r, MonadBaseControl IO m, MonadReader r m, MonadThrow m)
+  => PostImageJson -> m (Envelope '[ Err] ImageInfoKey)
 postImage PostImageJson{geom, filename} = do
   let imageInfo = ImageInfo () "example_filename.jpg" geom
   imageId <- dbCreateImage imageInfo

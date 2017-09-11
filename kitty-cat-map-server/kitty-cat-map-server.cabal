@@ -17,6 +17,7 @@ library
   hs-source-dirs:      src
   exposed-modules:     Kitty.Server
                      , Kitty.Server.Api
+                     , Kitty.Server.Image
                      , Kitty.Server.Conf
   build-depends:       base-noprelude >= 4.9 && < 5
                      , aeson

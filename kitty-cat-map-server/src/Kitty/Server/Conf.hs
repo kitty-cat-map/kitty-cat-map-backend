@@ -8,9 +8,7 @@ import System.ReadEnvVar (lookupEnvDef, readEnvDef)
 import Kitty.Db
        (Connection, DbConf, HasDbConf(dbConf), HasPool(pool), PgConnStr,
         Pool, mkDbConf)
-
-newtype ImgDir = ImgDir { unImgDir :: FilePath }
-  deriving (Eq, IsString, Read, Show)
+import Kitty.Server.Image (HasImgDir(imgDir), ImgDir)
 
 data ServerConf = ServerConf
   { serverConfDbConf :: !DbConf
@@ -33,23 +31,16 @@ instance HasPool ServerConf where
   pool :: Lens' ServerConf (Pool Connection)
   pool = dbConf . pool
 
+instance HasImgDir ServerConf where
+  imgDir :: Lens' ServerConf ImgDir
+  imgDir = lens serverConfImgDir (\s a -> s {serverConfImgDir = a})
+
 class HasPort s where
   port :: Lens' s Port
 
 instance HasPort Port where
   port :: Lens' Port Port
   port = id
-
-class HasImgDir s where
-  imgDir :: Lens' s ImgDir
-
-instance HasImgDir ImgDir where
-  imgDir :: Lens' ImgDir ImgDir
-  imgDir = id
-
-instance HasImgDir ServerConf where
-  imgDir :: Lens' ServerConf ImgDir
-  imgDir = lens serverConfImgDir (\s a -> s {serverConfImgDir = a})
 
 instance HasPort ServerConf where
   port :: Lens' ServerConf Port
