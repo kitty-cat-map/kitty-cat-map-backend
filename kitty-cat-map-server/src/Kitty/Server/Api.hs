@@ -2,15 +2,11 @@
 module Kitty.Server.Api where
 
 import Control.Lens (view)
-import Data.Aeson
-       (FromJSON, ToJSON, Value, parseJSON, toJSON, withText)
-import Data.Aeson.Types (Parser)
 import Data.Proxy (Proxy(Proxy))
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
 import Servant
-       (Get, JSON, Post, ReqBody, Server, ServerT, (:>), (:<|>)((:<|>)),
-        serve)
+       (Get, JSON, Post, Server, ServerT, (:>), (:<|>)((:<|>)), serve)
 import qualified Servant as Servant
 import Servant.Checked.Exceptions
        (Envelope, Throws, pureErrEnvelope, pureSuccEnvelope)
@@ -20,34 +16,25 @@ import Servant.Multipart
 import Servant.Utils.Enter ((:~>)(NT), enter)
 
 import Kitty.Db
-       (Geom(Geom), HasPool, ImageInfo'(ImageInfo), ImageInfoKey, Lat(Lat),
-        Lon(Lon), dbCreateImage, dbGetImages, mkLat, mkLon)
+       (Geom(Geom), HasPool, ImageInfo'(ImageInfo), ImageInfoKey,
+        dbCreateImage, mkLat, mkLon)
 import Kitty.Server.Conf (ServerConf, mkServerConfEnv, port)
 import Kitty.Server.Img (HasImgDir, ImgErr, copyImg, createImgDir)
 
-type Api = Image
+type Api = ImgApi :<|> SearchApi
 
-type Image = "image" :> (PostImage :<|> GetImage)
+type ImgApi = "image" :> PostImage
 
 type PostImage =
   MultipartForm PostImageForm :>
   Throws ImgErr :>
   Post '[JSON] ImageInfoKey
 
-type GetImage =
-  Throws Err :>
+type SearchApi = "search" :> GetSearchImage
+
+type GetSearchImage =
+  "image" :>
   Get '[JSON] Int
-
-data Err = Err deriving (Eq, Read, Show)
-
-instance ToJSON Err where
-  toJSON :: Err -> Value
-  toJSON = toJSON . show
-
-instance FromJSON Err where
-  parseJSON :: Value -> Parser Err
-  parseJSON = withText "Err" $
-    maybe (fail "could not parse as Err") pure . readMay . unpack
 
 data PostImageForm = PostImageForm
   { geom :: Geom
@@ -62,8 +49,17 @@ instance FromMultipart PostImageForm where
     tmpFile <- fdFilePath <$> listToMaybe (files multi)
     pure $ PostImageForm (Geom lat lon) tmpFile
 
-serverRoot :: ServerT Api (RIO ServerConf)
-serverRoot = postImage :<|> getImage
+imgApi
+  :: ( HasImgDir r
+     , HasPool r
+     , MonadBaseControl IO m
+     , MonadCatch m
+     , MonadIO m
+     , MonadReader r m
+     , MonadThrow m
+     )
+  => ServerT ImgApi m
+imgApi = postImage
 
 postImage
   :: ( HasImgDir r
@@ -84,11 +80,23 @@ postImage PostImageForm{geom, filename} = do
       imageId <- dbCreateImage imageInfo
       pureSuccEnvelope imageId
 
-getImage :: RIO ServerConf (Envelope '[Err] Int)
-getImage = do
-  images <- dbGetImages
-  print images
-  pureErrEnvelope Err
+searchApi :: MonadBaseControl IO m => ServerT SearchApi m
+searchApi = getSearchImage
+
+getSearchImage :: MonadBaseControl IO m => m Int
+getSearchImage = pure 3
+
+serverRoot
+  :: ( HasImgDir r
+     , HasPool r
+     , MonadBaseControl IO m
+     , MonadCatch m
+     , MonadIO m
+     , MonadReader r m
+     , MonadThrow m
+     )
+  => ServerT Api m
+serverRoot = imgApi :<|> searchApi
 
 -- | Create a WAI 'Application' capable of running with Warp.
 app :: ServerConf -> Application
