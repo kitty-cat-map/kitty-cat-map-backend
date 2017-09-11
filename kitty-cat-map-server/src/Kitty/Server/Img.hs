@@ -87,9 +87,12 @@ copyImg tmpFile = runExceptT $ do
       (\(_ :: IOException) -> throwError ImgErrHashErr)
   ext <- imgExt <$> imgType tmpFile
   let newFile = imgsPath </> digest <.> ext
-  newFileExists <- liftIO $ doesFileExist newFile
-  unless newFileExists . liftIO $ copyFile tmpFile newFile
-  pure newFile
+  eitherRes <- try $ do
+    newFileExists <- liftIO $ doesFileExist newFile
+    unless newFileExists . liftIO $ copyFile tmpFile newFile
+  case eitherRes of
+    Right () -> pure newFile
+    Left (_ :: IOException) -> throwError ImgErrCouldNotCopy
 
 createImgDir :: (HasImgDir r, MonadIO m, MonadReader r m) => m ()
 createImgDir = do
