@@ -21,6 +21,25 @@ executable kitty-cat-map-exe
                      , kitty-cat-map-base
                      , kitty-cat-map-server
   default-language:    Haskell2010
+  default-extensions:  DataKinds
+                     , DeriveDataTypeable
+                     , DeriveGeneric
+                     , EmptyDataDecls
+                     , FlexibleContexts
+                     , FlexibleInstances
+                     , GADTs
+                     , GeneralizedNewtypeDeriving
+                     , InstanceSigs
+                     , MultiParamTypeClasses
+                     , NamedFieldPuns
+                     , NoMonomorphismRestriction
+                     , OverloadedStrings
+                     , RecordWildCards
+                     , ScopedTypeVariables
+                     , TupleSections
+                     , TypeFamilies
+                     , TypeOperators
+                     , ViewPatterns
 
 test-suite kitty-cat-map-test
   type:                exitcode-stdio-1.0
