@@ -29,9 +29,10 @@ dump-th:
 	@echo
 	@find "$$(stack path --dist-dir)" -name "*.dump-splices" | sort
 
-# Run ghci (REPL).
+# Run ghci (REPL).  See the note in the `.ghci` file for why the
+# `NoImplicitPrelude` flag is needed.
 ghci:
-	stack ghci
+	stack ghci --ghci-options "-XNoImplicitPrelude" .
 
 # Generate the documentation.
 haddock:

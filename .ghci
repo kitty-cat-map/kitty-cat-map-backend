@@ -1,2 +1,7 @@
 
-import Prelude
+-- In order to get GHCi to work, `stack ghci` should be passed the flag
+-- `--ghci-options "-XNoImplicitPrelude"`.  Then, we have to set the
+-- `ImplicitPrelude` option when GHCi finally loads.  This is an annoying
+-- work-around for GHCi's inability to use alternative Preludes easily.
+-- https://ghc.haskell.org/trac/ghc/ticket/10920
+:set -XImplicitPrelude
