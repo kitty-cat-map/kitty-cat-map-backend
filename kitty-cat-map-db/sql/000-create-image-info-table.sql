@@ -5,7 +5,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE IF NOT EXISTS image_info (
   id UUID CONSTRAINT firstkey PRIMARY KEY DEFAULT uuid_generate_v4(),
   filename TEXT NOT NULL,
-  date TIMESTAMP NOT NULL,
+  date TIMESTAMPTZ NOT NULL,
   lat DOUBLE PRECISION NOT NULL CHECK (lat >= -90 AND lat <= 90),
   lon DOUBLE PRECISION NOT NULL CHECK (lon >= -180 AND lon <= 180)
   );
