@@ -23,7 +23,7 @@ import Kitty.Db
        (Geom(Geom), HasPool, ImageInfo'(ImageInfo), ImageInfoKey, Lat(Lat),
         Lon(Lon), dbCreateImage, dbGetImages)
 import Kitty.Server.Conf (ServerConf, mkServerConfEnv, port)
-import Kitty.Server.Img (createImgDir)
+import Kitty.Server.Img (HasImgDir, copyImg, createImgDir)
 
 type Api = Image
 
@@ -66,12 +66,23 @@ serverRoot :: ServerT Api (RIO ServerConf)
 serverRoot = postImage :<|> getImage
 
 postImage
-  :: (HasPool r, MonadBaseControl IO m, MonadReader r m, MonadThrow m)
+  :: ( HasImgDir r
+     , HasPool r
+     , MonadBaseControl IO m
+     , MonadCatch m
+     , MonadIO m
+     , MonadReader r m
+     , MonadThrow m
+     )
   => PostImageJson -> m (Envelope '[ Err] ImageInfoKey)
 postImage PostImageJson{geom, filename} = do
-  let imageInfo = ImageInfo () "example_filename.jpg" geom
-  imageId <- dbCreateImage imageInfo
-  pureSuccEnvelope imageId
+  eitherImg <- copyImg filename
+  case eitherImg of
+    Left _ -> undefined
+    Right imgPath -> do
+      let imageInfo = ImageInfo () imgPath geom
+      imageId <- dbCreateImage imageInfo
+      pureSuccEnvelope imageId
 
 getImage :: RIO ServerConf (Envelope '[Err] Int)
 getImage = do
