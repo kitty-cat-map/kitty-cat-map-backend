@@ -45,6 +45,7 @@ library
   default-extensions:  DataKinds
                      , DeriveDataTypeable
                      , DeriveGeneric
+                     , DuplicateRecordFields
                      , EmptyDataDecls
                      , FlexibleContexts
                      , FlexibleInstances

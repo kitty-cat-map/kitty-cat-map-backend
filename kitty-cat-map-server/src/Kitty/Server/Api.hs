@@ -78,6 +78,13 @@ data GetSearchImgForm = GetSearchImgForm
 
 $(deriveJSON defaultOptions ''GetSearchImgForm)
 
+data ImgSearchRes = ImgSearchRes
+  { id :: ImgInfoKey
+  , url :: Text
+  , date :: UTCTime
+  , geom :: Geom
+  } deriving Show
+
 --------------
 -- Handlers --
 --------------
