@@ -1,31 +1,35 @@
+{-# LANGUAGE TemplateHaskell #-}
 
 module Kitty.Db.Model where
 
 import Data.Aeson (FromJSON, ToJSON)
+import Data.Aeson.TH (deriveJSON, defaultOptions, fieldLabelModifier)
 import Data.UUID (UUID)
 import Database.PostgreSQL.Simple.FromField (FromField)
 import Database.PostgreSQL.Simple.FromRow (FromRow, RowParser, fromRow, field)
 
 import Kitty.Db.Geom (Geom)
 
-newtype ImageInfoKey = ImageInfoKey { unImageInfoKey :: UUID }
+newtype ImgInfoKey = ImgInfoKey { unImgInfoKey :: UUID }
   deriving (Eq, FromField, FromJSON, Read, Show, ToJSON)
 
-data ImageInfo' key = ImageInfo
+data ImgInfo' key = ImgInfo
   { imageId :: key
-  , imageFileName :: FilePath
+  , imageFilename :: FilePath
   , imageDate :: UTCTime
   , imageGeom :: Geom
   } deriving Show
 
-type ImageInfo = ImageInfo' ImageInfoKey
+$(deriveJSON defaultOptions{fieldLabelModifier = drop 5} ''ImgInfo')
 
-type ImageInfoData = ImageInfo' ()
+type ImgInfo = ImgInfo' ImgInfoKey
 
-instance FromField key => FromRow (ImageInfo' key) where
-  fromRow :: RowParser (ImageInfo' key)
+type ImgInfoData = ImgInfo' ()
+
+instance FromField key => FromRow (ImgInfo' key) where
+  fromRow :: RowParser (ImgInfo' key)
   fromRow =
-    ImageInfo
+    ImgInfo
       <$> field
       <*> field
       <*> field

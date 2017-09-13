@@ -17,6 +17,7 @@ library
   hs-source-dirs:      src
   exposed-modules:     Prelude
   build-depends:       base-noprelude >= 4.9 && < 5
+                     , aeson
                      , classy-prelude
                      , monad-logger
                      , mtl

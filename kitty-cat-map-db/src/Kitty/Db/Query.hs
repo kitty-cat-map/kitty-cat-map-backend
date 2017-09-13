@@ -3,24 +3,32 @@
 module Kitty.Db.Query where
 
 import Control.Lens (view)
+import Data.Aeson (FromJSON, ToJSON)
 import Control.Monad.Base (liftBase)
 import Data.Pool (withResource)
 import Database.PostgreSQL.Simple
        (Connection, FromRow, Only(Only), Query, ToRow, formatQuery, query,
         query_)
 import Database.PostgreSQL.Simple.FromField (FromField)
+import Database.PostgreSQL.Simple.ToField (ToField)
 import Database.PostgreSQL.Simple.SqlQQ (sql)
 
 import Kitty.Db.Conf (HasPool(pool))
 import Kitty.Db.Geom (Geom(Geom), Lat, Lon)
 import Kitty.Db.Model
-       (ImageInfo'(ImageInfo, imageDate, imageFileName, imageGeom), ImageInfo,
-        ImageInfoData, ImageInfoKey)
+       (ImgInfo'(ImgInfo, imageDate, imageFilename, imageGeom), ImgInfo,
+        ImgInfoData, ImgInfoKey)
 
 data QueryError = QueryError Text
   deriving (Eq, Read, Show)
 
 instance Exception QueryError
+
+newtype Offset = Offset { unOffset :: Int }
+  deriving (Eq, FromJSON, Num, Ord, Read, Show, ToField, ToJSON)
+
+newtype Limit = Limit { unLimit :: Int }
+  deriving (Eq, FromJSON, Num, Ord, Read, Show, ToField, ToJSON)
 
 runDb :: (MonadBaseControl IO m, MonadReader r m, HasPool r) => (Connection -> m a) -> m a
 runDb f = do
@@ -29,15 +37,15 @@ runDb f = do
 
 dbGetImages
   :: (MonadBaseControl IO m, MonadReader r m, HasPool r)
-  => m [ImageInfo]
+  => m [ImgInfo]
 dbGetImages =
   runDb $
   quer_ "SELECT id, filename, date, ST_Y(geom), ST_X(geom) FROM image_info"
 
 dbFindImages
   :: (MonadBaseControl IO m, MonadReader r m, HasPool r)
-  => Lat -> Lat -> Lon -> Lon -> m [ImageInfo]
-dbFindImages minLat maxLat minLon maxLon = do
+  => Lat -> Lat -> Lon -> Lon -> Offset -> Limit -> m [ImgInfo]
+dbFindImages minLat maxLat minLon maxLon offset limit = do
   let q =
         [sql|
           SELECT id, filename, "date", ST_Y(geom), ST_X(geom)
@@ -48,17 +56,24 @@ dbFindImages minLat maxLat minLon maxLon = do
             lon >= ? AND
             lon <= ?
           ORDER BY date DESC
+          LIMIT ?
+          OFFSET ?
           |]
-  runDb $ quer q (minLat, maxLat, minLon, maxLon)
+  runDb $ quer q (minLat, maxLat, minLon, maxLon, offset, limit)
 
 dbCreateImage
   :: (MonadBaseControl IO m, MonadReader r m, MonadThrow m, HasPool r)
-  => ImageInfoData -> m ImageInfoKey
-dbCreateImage ImageInfo {imageFileName, imageDate, imageGeom = Geom lat lon} = do
-  runDb $
-    querS
-      "INSERT INTO image_info (filename, date, lat, lon, geom) values (?, ?, ?, ?, ST_SetSRID(ST_POINT(?, ?), 4326)) RETURNING id"
-      (imageFileName, imageDate, lat, lon, lon, lat)
+  => ImgInfoData -> m ImgInfoKey
+dbCreateImage ImgInfo {imageFilename, imageDate, imageGeom = Geom lat lon} = do
+  let q =
+        [sql|
+          INSERT INTO image_info
+            (filename, date, lat, lon, geom)
+          VALUES
+            (?, ?, ?, ?, ST_SetSRID(ST_POINT(?, ?), 4326))
+          RETURNING id
+          |]
+  runDb $ querS q (imageFilename, imageDate, lat, lon, lon, lat)
 
 quer
   :: (FromRow r, MonadBase IO m, ToRow q)

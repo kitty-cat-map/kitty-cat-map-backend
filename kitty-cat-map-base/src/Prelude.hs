@@ -1,15 +1,33 @@
 {-# OPTIONS_GHC -fno-warn-missing-import-lists #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Prelude
   ( module X
   , module Prelude
   ) where
 
+import Data.Aeson (FromJSON, ToJSON, Value, parseJSON, toJSON)
+import Data.Aeson.Types (Parser)
 import ClassyPrelude as X
 import Control.Monad.Except as X (MonadError(..), runExceptT)
 import Control.Monad.Logger
+import Data.Void as X
 
--- import UnliftIO
+----------
+-- Void --
+----------
+
+instance FromJSON Void where
+  parseJSON :: Value -> Parser Void
+  parseJSON = fail "Can't parse a Void as JSON"
+
+instance ToJSON Void where
+  toJSON :: Void -> Value
+  toJSON v = absurd v
+
+---------
+-- RIO --
+---------
 
 newtype RIO env a = RIO
   { unRIO :: ReaderT env IO a

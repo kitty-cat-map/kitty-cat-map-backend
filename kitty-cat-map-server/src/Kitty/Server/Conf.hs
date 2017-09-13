@@ -48,7 +48,7 @@ instance HasPort ServerConf where
 
 mkServerConfEnv :: MonadIO m => m ServerConf
 mkServerConfEnv = do
-  serverPort <- readEnvDef "PORT" 8080
+  serverPort <- readEnvDef "PORT" 8090
   serverImgDir <- lookupEnvDef "KITTY_IMG_DIR" ".images/"
   pgConnStr <-
     lookupEnvDef

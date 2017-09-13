@@ -1,14 +1,16 @@
+{-# LANGUAGE TemplateHaskell #-}
 
 module Kitty.Server.Api where
 
 import Control.Lens (view)
+import Data.Aeson.TH (defaultOptions, deriveJSON)
 import Data.Attoparsec.Text (maybeResult, parse)
 import Data.Attoparsec.Time (utcTime)
 import Data.Proxy (Proxy(Proxy))
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
 import Servant
-       (Get, JSON, Post, Server, ServerT, (:>), (:<|>)((:<|>)), serve)
+       (Get, JSON, Post, ReqBody, Server, ServerT, (:>), (:<|>)((:<|>)), serve)
 import qualified Servant as Servant
 import Servant.Checked.Exceptions
        (Envelope, Throws, pureErrEnvelope, pureSuccEnvelope)
@@ -18,43 +20,79 @@ import Servant.Multipart
 import Servant.Utils.Enter ((:~>)(NT), enter)
 
 import Kitty.Db
-       (Geom(Geom), HasPool, ImageInfo'(ImageInfo), ImageInfoKey,
-        dbCreateImage, dbFindImages, mkLat, mkLon)
+       (Geom(Geom), HasPool, ImgInfo, ImgInfo'(ImgInfo), ImgInfoKey, Lat,
+        Lon, Offset, dbCreateImage, dbFindImages, mkLat, mkLon)
 import Kitty.Server.Conf (ServerConf, mkServerConfEnv, port)
 import Kitty.Server.Img (HasImgDir, ImgErr, copyImg, createImgDir)
+
+---------
+-- API --
+---------
 
 type Api = ImgApi :<|> SearchApi
 
 type ImgApi = "image" :> PostImage
 
 type PostImage =
-  MultipartForm PostImageForm :>
+  MultipartForm PostImgForm :>
   Throws ImgErr :>
-  Post '[JSON] ImageInfoKey
+  Post '[JSON] ImgInfoKey
 
-type SearchApi = "search" :> GetSearchImage
+type SearchApi = "search" :> GetSearchImg
 
-type GetSearchImage =
+type GetSearchImg =
   "image" :>
-  Get '[JSON] Int
+  ReqBody '[JSON] GetSearchImgForm :>
+  Throws Void :>
+  Get '[JSON] [ImgInfo]
 
-data PostImageForm = PostImageForm
+---------------------------------
+-- JSON Input and Output Types --
+---------------------------------
+
+data PostImgForm = PostImgForm
   { filename :: FilePath
   , date :: UTCTime
   , geom :: Geom
   }
 
 parseDate :: Text -> Maybe UTCTime
-parseDate = maybeResult . parse utcTime 
+parseDate = maybeResult . parse utcTime
 
-instance FromMultipart PostImageForm where
-  fromMultipart :: MultipartData -> Maybe PostImageForm
+instance FromMultipart PostImgForm where
+  fromMultipart :: MultipartData -> Maybe PostImgForm
   fromMultipart multi = do
     tmpFile <- fdFilePath <$> listToMaybe (files multi)
     date <- parseDate =<< lookupInput "date" multi
     lat <- mkLat =<< readMay =<< lookupInput "lat" multi
     lon <- mkLon =<< readMay =<< lookupInput "lon" multi
-    pure $ PostImageForm tmpFile date (Geom lat lon)
+    pure $ PostImgForm tmpFile date (Geom lat lon)
+
+data GetSearchImgForm = GetSearchImgForm
+  { minLat :: Lat
+  , maxLat :: Lat
+  , minLon :: Lon
+  , maxLon :: Lon
+  , page :: Offset
+  }
+
+$(deriveJSON defaultOptions ''GetSearchImgForm)
+
+--------------
+-- Handlers --
+--------------
+
+serverRoot
+  :: ( HasImgDir r
+     , HasPool r
+     , MonadBaseControl IO m
+     , MonadCatch m
+     , MonadIO m
+     , MonadReader r m
+     , MonadThrow m
+     )
+  => ServerT Api m
+serverRoot = imgApi :<|> searchApi
 
 imgApi
   :: ( HasImgDir r
@@ -77,42 +115,32 @@ postImage
      , MonadReader r m
      , MonadThrow m
      )
-  => PostImageForm -> m (Envelope '[ImgErr] ImageInfoKey)
-postImage PostImageForm{filename, date, geom} = do
+  => PostImgForm -> m (Envelope '[ImgErr] ImgInfoKey)
+postImage PostImgForm{filename, date, geom} = do
   eitherImg <- copyImg filename
   case eitherImg of
     Left imgErr -> pureErrEnvelope imgErr
     Right imgPath -> do
-      let imageInfo = ImageInfo () imgPath date geom
+      let imageInfo = ImgInfo () imgPath date geom
       imageId <- dbCreateImage imageInfo
       pureSuccEnvelope imageId
 
 searchApi
   :: (HasPool r, MonadBaseControl IO m, MonadIO m, MonadReader r m)
-  => ServerT SearchApi m
+  => ServerT GetSearchImg m
 searchApi = getSearchImage
 
 getSearchImage
   :: (HasPool r, MonadBaseControl IO m, MonadIO m, MonadReader r m)
-  => m Int
-getSearchImage = do
-  images <- dbFindImages (-50) 50 0 100
-  print images
-  pure 3
+  => GetSearchImgForm -> m (Envelope '[Void] [ImgInfo])
+getSearchImage GetSearchImgForm{minLat, maxLat, minLon, maxLon, page} = do
+  images <- dbFindImages minLat maxLat minLon maxLon page 20
+  pureSuccEnvelope images
 
-serverRoot
-  :: ( HasImgDir r
-     , HasPool r
-     , MonadBaseControl IO m
-     , MonadCatch m
-     , MonadIO m
-     , MonadReader r m
-     , MonadThrow m
-     )
-  => ServerT Api m
-serverRoot = imgApi :<|> searchApi
+--------------------------
+-- Application and main --
+--------------------------
 
--- | Create a WAI 'Application' capable of running with Warp.
 app :: ServerConf -> Application
 app config = serve (Proxy :: Proxy Api) apiServer
   where
