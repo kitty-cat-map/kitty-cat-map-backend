@@ -60,7 +60,7 @@ dbFindImages minLat maxLat minLon maxLon offset limit = do
           LIMIT ?
           OFFSET ?
           |]
-  runDb $ quer q (minLat, maxLat, minLon, maxLon, offset, limit)
+  runDb $ quer q (minLat, maxLat, minLon, maxLon, limit, offset)
 
 dbCreateImage
   :: (MonadBaseControl IO m, MonadReader r m, MonadThrow m, HasPool r)
