@@ -31,8 +31,8 @@ instance HasImgUrl ImgUrl where
 
 
 data ImgConf = ImgConf
-  { imgConfDir :: ImgDir
-  , imgConfUrl :: ImgUrl
+  { imgConfDir :: !ImgDir
+  , imgConfUrl :: !ImgUrl
   }
 
 class HasImgConf s where

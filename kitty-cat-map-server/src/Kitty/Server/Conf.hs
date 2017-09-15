@@ -8,11 +8,13 @@ import System.ReadEnvVar (lookupEnvDef, readEnvDef)
 import Kitty.Db
        (Connection, DbConf, HasDbConf(dbConf), HasPool(pool), PgConnStr,
         Pool, mkDbConf)
-import Kitty.Img (HasImgDir(imgDir), ImgDir)
+import Kitty.Img
+       (HasImgConf(imgConf), HasImgDir(imgDir), HasImgUrl(imgUrl),
+        ImgConf, ImgDir, ImgUrl, mkImgConf)
 
 data ServerConf = ServerConf
   { serverConfDbConf :: !DbConf
-  , serverConfImgConf :: !ImgDir
+  , serverConfImgConf :: !ImgConf
   , serverConfPort :: {-# UNPACK #-} !Port
   }
 
@@ -40,8 +42,8 @@ instance HasImgDir ServerConf where
   imgDir = imgConf . imgDir
 
 instance HasImgUrl ServerConf where
-  imgDir :: Lens' ServerConf ImgUrl
-  imgDir = imgConf . imgUrl
+  imgUrl :: Lens' ServerConf ImgUrl
+  imgUrl = imgConf . imgUrl
 
 class HasPort s where
   port :: Lens' s Port
@@ -58,14 +60,21 @@ mkServerConfEnv :: MonadIO m => m ServerConf
 mkServerConfEnv = do
   serverPort <- readEnvDef "PORT" 8090
   serverImgDir <- lookupEnvDef "KITTY_IMG_DIR" ".images/"
+  serverImgUrl <-
+    lookupEnvDef "KITTY_IMG_URL" $ "http://localhost:8090/image/"
   pgConnStr <-
     lookupEnvDef
       "KITTY_DB_CONN_STR"
       "postgres://kitty-cat-map:foobar@localhost:5432/kitty-cat-map"
-  mkServerConf serverImgDir serverPort pgConnStr
+  mkServerConf serverImgDir serverImgUrl serverPort pgConnStr
 
-mkServerConf :: MonadIO m => ImgDir -> Port -> PgConnStr -> m ServerConf
-mkServerConf serverConfImgDir serverConfPort pgConnStr = do
+mkServerConf :: MonadIO m => ImgDir -> ImgUrl -> Port -> PgConnStr -> m ServerConf
+mkServerConf imgDir' imgUrl' serverConfPort pgConnStr = do
   dbConfig <- mkDbConf pgConnStr
+  imgConfig <- mkImgConf imgDir' imgUrl'
   pure $
-    ServerConf {serverConfDbConf = dbConfig, serverConfImgDir, serverConfPort}
+    ServerConf
+    { serverConfDbConf = dbConfig
+    , serverConfImgConf = imgConfig
+    , serverConfPort
+    }

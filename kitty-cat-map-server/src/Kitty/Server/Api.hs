@@ -10,8 +10,8 @@ import Data.Proxy (Proxy(Proxy))
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
 import Servant
-       (Capture, Get, JSON, Post, ReqBody, Server, ServerT, (:>),
-        (:<|>)((:<|>)), serve)
+       (Capture, Get, JSON, Post, Server, ServerT, (:>), (:<|>)((:<|>)),
+        serve)
 import qualified Servant as Servant
 import Servant.Checked.Exceptions
        (Envelope, Throws, pureErrEnvelope, pureSuccEnvelope)
@@ -24,10 +24,10 @@ import Kitty.Db
        (Geom(Geom), HasPool, ImgInfo,
         ImgInfo'(ImgInfo, imgId, imgFilename, imgDate, imgGeom), ImgInfoKey,
         Lat, Lon, Offset, dbCreateImage, dbFindImages, mkLat, mkLon)
-import Kitty.Server.Conf (ServerConf, mkServerConfEnv, port)
-import Kitty.Server.Img
+import Kitty.Img
        (HasImgDir, HasImgUrl, ImgErr, copyImg, createImgDir,
         imgFilenameToUrl)
+import Kitty.Server.Conf (ServerConf, mkServerConfEnv, port)
 
 ---------
 -- API --
@@ -50,7 +50,7 @@ type GetSearchImg =
   Capture "maxLat" Lat :>
   Capture "minLon" Lon :>
   Capture "maxLon" Lon :>
-  Capture "page" Offset :>
+  Capture "offset" Offset :>
   Throws Void :>
   Get '[JSON] [ImgRes]
 
@@ -63,7 +63,6 @@ data PostImgForm = PostImgForm
   , date :: UTCTime
   , geom :: Geom
   }
-
 
 instance FromMultipart PostImgForm where
   fromMultipart :: MultipartData -> Maybe PostImgForm
@@ -142,8 +141,8 @@ searchApi = getSearchImage
 getSearchImage
   :: (HasImgUrl r, HasPool r, MonadBaseControl IO m, MonadIO m, MonadReader r m)
   => Lat -> Lat -> Lon -> Lon -> Offset -> m (Envelope '[Void] [ImgRes])
-getSearchImage minLat maxLat minLon maxLon page = do
-  imgs <- dbFindImages minLat maxLat minLon maxLon page 20
+getSearchImage minLat maxLat minLon maxLon offset = do
+  imgs <- dbFindImages minLat maxLat minLon maxLon offset 20
   imgResults <- traverse imgToRes imgs
   pureSuccEnvelope imgResults
 

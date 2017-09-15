@@ -15,7 +15,10 @@ import System.Directory
 import System.IO (IOMode(ReadMode), withFile)
 
 import Kitty.Db (ImgFilename(ImgFilename))
-import Kitty.Img.Conf (HasImgDir(imgDir), HasImgUrl(imgUrl), ImgUrl(ImgUrl))
+import Kitty.Img.Conf
+       (HasImgConf(imgConf), HasImgDir(imgDir), HasImgUrl(imgUrl),
+        ImgUrl(ImgUrl), ImgConf(ImgConf, imgConfDir, imgConfUrl),
+        ImgDir(ImgDir), ImgUrl(ImgUrl), mkImgConf)
 
 data ImgErr
   = ImgErrHashErr
