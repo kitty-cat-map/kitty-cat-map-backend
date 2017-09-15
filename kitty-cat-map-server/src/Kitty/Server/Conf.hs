@@ -12,7 +12,7 @@ import Kitty.Server.Img (HasImgDir(imgDir), ImgDir)
 
 data ServerConf = ServerConf
   { serverConfDbConf :: !DbConf
-  , serverConfImgDir :: !ImgDir
+  , serverConfImgConf :: !ImgDir
   , serverConfPort :: {-# UNPACK #-} !Port
   }
 
@@ -31,9 +31,17 @@ instance HasPool ServerConf where
   pool :: Lens' ServerConf (Pool Connection)
   pool = dbConf . pool
 
+instance HasImgConf ServerConf where
+  imgConf :: Lens' ServerConf ImgConf
+  imgConf = lens serverConfImgConf (\s a -> s {serverConfImgConf = a})
+
 instance HasImgDir ServerConf where
   imgDir :: Lens' ServerConf ImgDir
-  imgDir = lens serverConfImgDir (\s a -> s {serverConfImgDir = a})
+  imgDir = imgConf . imgDir
+
+instance HasImgUrl ServerConf where
+  imgDir :: Lens' ServerConf ImgUrl
+  imgDir = imgConf . imgUrl
 
 class HasPort s where
   port :: Lens' s Port

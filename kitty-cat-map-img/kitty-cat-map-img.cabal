@@ -1,4 +1,4 @@
-name:                kitty-cat-map-server
+name:                kitty-cat-map-img
 version:             0.1.0.0
 -- synopsis:
 -- description:
@@ -15,32 +15,10 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Kitty.Server
-                     , Kitty.Server.Api
-                     , Kitty.Server.Img
-                     , Kitty.Server.Conf
+  exposed-modules:     Kitty.Img
+                     , Kitty.Img.Conf
   build-depends:       base-noprelude >= 4.9 && < 5
                      , aeson
-                     , attoparsec
-                     , attoparsec-iso8601
-                     , bytestring
-                     , cryptonite
-                     , cryptonite-conduit
-                     , directory
-                     , http-api-data
-                     , kitty-cat-map-base
-                     , kitty-cat-map-db
-                     , kitty-cat-map-img
-                     , lens
-                     , natural-transformation
-                     , read-env-var
-                     , servant
-                     , servant-checked-exceptions
-                     , servant-multipart
-                     , servant-server
-                     , text
-                     , wai
-                     , warp
   default-language:    Haskell2010
   ghc-options:         -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wmissing-import-lists
   default-extensions:  DataKinds

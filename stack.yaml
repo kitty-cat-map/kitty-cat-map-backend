@@ -38,6 +38,7 @@ resolver: lts-9.2
 packages:
     - ./kitty-cat-map-base
     - ./kitty-cat-map-db
+    - ./kitty-cat-map-img
     - ./kitty-cat-map-server
     - .
 

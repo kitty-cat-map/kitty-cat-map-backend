@@ -10,7 +10,8 @@ import Data.Proxy (Proxy(Proxy))
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp (run)
 import Servant
-       (Get, JSON, Post, ReqBody, Server, ServerT, (:>), (:<|>)((:<|>)), serve)
+       (Capture, Get, JSON, Post, ReqBody, Server, ServerT, (:>),
+        (:<|>)((:<|>)), serve)
 import qualified Servant as Servant
 import Servant.Checked.Exceptions
        (Envelope, Throws, pureErrEnvelope, pureSuccEnvelope)
@@ -20,16 +21,19 @@ import Servant.Multipart
 import Servant.Utils.Enter ((:~>)(NT), enter)
 
 import Kitty.Db
-       (Geom(Geom), HasPool, ImgInfo, ImgInfo'(ImgInfo), ImgInfoKey, Lat,
-        Lon, Offset, dbCreateImage, dbFindImages, mkLat, mkLon)
+       (Geom(Geom), HasPool, ImgInfo,
+        ImgInfo'(ImgInfo, imgId, imgFilename, imgDate, imgGeom), ImgInfoKey,
+        Lat, Lon, Offset, dbCreateImage, dbFindImages, mkLat, mkLon)
 import Kitty.Server.Conf (ServerConf, mkServerConfEnv, port)
-import Kitty.Server.Img (HasImgDir, ImgErr, copyImg, createImgDir)
+import Kitty.Server.Img
+       (HasImgDir, HasImgUrl, ImgErr, copyImg, createImgDir,
+        imgFilenameToUrl)
 
 ---------
 -- API --
 ---------
 
-type Api = ImgApi :<|> SearchApi
+type Api = "v0" :> (ImgApi :<|> SearchApi)
 
 type ImgApi = "image" :> PostImage
 
@@ -42,9 +46,13 @@ type SearchApi = "search" :> GetSearchImg
 
 type GetSearchImg =
   "image" :>
-  ReqBody '[JSON] GetSearchImgForm :>
+  Capture "minLat" Lat :>
+  Capture "maxLat" Lat :>
+  Capture "minLon" Lon :>
+  Capture "maxLon" Lon :>
+  Capture "page" Offset :>
   Throws Void :>
-  Get '[JSON] [ImgInfo]
+  Get '[JSON] [ImgRes]
 
 ---------------------------------
 -- JSON Input and Output Types --
@@ -56,8 +64,6 @@ data PostImgForm = PostImgForm
   , geom :: Geom
   }
 
-parseDate :: Text -> Maybe UTCTime
-parseDate = maybeResult . parse utcTime
 
 instance FromMultipart PostImgForm where
   fromMultipart :: MultipartData -> Maybe PostImgForm
@@ -67,23 +73,18 @@ instance FromMultipart PostImgForm where
     lat <- mkLat =<< readMay =<< lookupInput "lat" multi
     lon <- mkLon =<< readMay =<< lookupInput "lon" multi
     pure $ PostImgForm tmpFile date (Geom lat lon)
+    where
+      parseDate :: Text -> Maybe UTCTime
+      parseDate = maybeResult . parse utcTime
 
-data GetSearchImgForm = GetSearchImgForm
-  { minLat :: Lat
-  , maxLat :: Lat
-  , minLon :: Lon
-  , maxLon :: Lon
-  , page :: Offset
-  }
-
-$(deriveJSON defaultOptions ''GetSearchImgForm)
-
-data ImgSearchRes = ImgSearchRes
+data ImgRes = ImgRes
   { id :: ImgInfoKey
   , url :: Text
   , date :: UTCTime
   , geom :: Geom
   } deriving Show
+
+$(deriveJSON defaultOptions ''ImgRes)
 
 --------------
 -- Handlers --
@@ -91,6 +92,7 @@ data ImgSearchRes = ImgSearchRes
 
 serverRoot
   :: ( HasImgDir r
+     , HasImgUrl r
      , HasPool r
      , MonadBaseControl IO m
      , MonadCatch m
@@ -133,16 +135,28 @@ postImage PostImgForm{filename, date, geom} = do
       pureSuccEnvelope imageId
 
 searchApi
-  :: (HasPool r, MonadBaseControl IO m, MonadIO m, MonadReader r m)
-  => ServerT GetSearchImg m
+  :: (HasImgUrl r, HasPool r, MonadBaseControl IO m, MonadIO m, MonadReader r m)
+  => ServerT SearchApi m
 searchApi = getSearchImage
 
 getSearchImage
-  :: (HasPool r, MonadBaseControl IO m, MonadIO m, MonadReader r m)
-  => GetSearchImgForm -> m (Envelope '[Void] [ImgInfo])
-getSearchImage GetSearchImgForm{minLat, maxLat, minLon, maxLon, page} = do
-  images <- dbFindImages minLat maxLat minLon maxLon page 20
-  pureSuccEnvelope images
+  :: (HasImgUrl r, HasPool r, MonadBaseControl IO m, MonadIO m, MonadReader r m)
+  => Lat -> Lat -> Lon -> Lon -> Offset -> m (Envelope '[Void] [ImgRes])
+getSearchImage minLat maxLat minLon maxLon page = do
+  imgs <- dbFindImages minLat maxLat minLon maxLon page 20
+  imgResults <- traverse imgToRes imgs
+  pureSuccEnvelope imgResults
+
+imgToRes :: (HasImgUrl r, MonadReader r m) => ImgInfo -> m ImgRes
+imgToRes ImgInfo {imgId, imgFilename, imgDate, imgGeom} = do
+  url' <- imgFilenameToUrl imgFilename
+  pure $
+    ImgRes
+    { id = imgId
+    , url = url'
+    , date = imgDate
+    , geom = imgGeom
+    }
 
 --------------------------
 -- Application and main --

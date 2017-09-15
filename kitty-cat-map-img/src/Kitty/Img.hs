@@ -1,6 +1,9 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module Kitty.Server.Img where
+module Kitty.Img
+  ( module Kitty.Img
+  , module Kitty.Img.Conf
+  ) where
 
 import Control.Lens (Lens', _Wrapped, view)
 import Control.Lens.TH (makeWrapped)
@@ -13,30 +16,6 @@ import System.Directory
 import System.IO (IOMode(ReadMode), withFile)
 
 import Kitty.Db (ImgFilename(ImgFilename))
-
-newtype ImgDir = ImgDir { unImgDir :: FilePath }
-  deriving (Eq, IsString, Read, Show)
-
-$(makeWrapped ''ImgDir)
-
-class HasImgDir s where
-  imgDir :: Lens' s ImgDir
-
-instance HasImgDir ImgDir where
-  imgDir :: Lens' ImgDir ImgDir
-  imgDir = id
-
-newtype ImgUrl = ImgUrl { unImgUrl :: Text }
-  deriving (Eq, IsString, Read, Show)
-
-$(makeWrapped ''ImgUrl)
-
-class HasImgUrl s where
-  imgUrl :: Lens' s ImgUrl
-
-instance HasImgUrl ImgUrl where
-  imgUrl :: Lens' ImgUrl ImgUrl
-  imgUrl = id
 
 data ImgErr
   = ImgErrHashErr

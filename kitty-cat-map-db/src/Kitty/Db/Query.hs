@@ -12,11 +12,12 @@ import Database.PostgreSQL.Simple
 import Database.PostgreSQL.Simple.FromField (FromField)
 import Database.PostgreSQL.Simple.ToField (ToField)
 import Database.PostgreSQL.Simple.SqlQQ (sql)
+import Web.HttpApiData (FromHttpApiData)
 
 import Kitty.Db.Conf (HasPool(pool))
 import Kitty.Db.Geom (Geom(Geom), Lat, Lon)
 import Kitty.Db.Model
-       (ImgInfo'(ImgInfo, imageDate, imageFilename, imageGeom), ImgInfo,
+       (ImgInfo'(ImgInfo, imgDate, imgFilename, imgGeom), ImgInfo,
         ImgInfoData, ImgInfoKey)
 
 data QueryError = QueryError Text
@@ -25,10 +26,10 @@ data QueryError = QueryError Text
 instance Exception QueryError
 
 newtype Offset = Offset { unOffset :: Int }
-  deriving (Eq, FromJSON, Num, Ord, Read, Show, ToField, ToJSON)
+  deriving (Eq, FromHttpApiData, FromJSON, Num, Ord, Read, Show, ToField, ToJSON)
 
 newtype Limit = Limit { unLimit :: Int }
-  deriving (Eq, FromJSON, Num, Ord, Read, Show, ToField, ToJSON)
+  deriving (Eq, FromHttpApiData, FromJSON, Num, Ord, Read, Show, ToField, ToJSON)
 
 runDb :: (MonadBaseControl IO m, MonadReader r m, HasPool r) => (Connection -> m a) -> m a
 runDb f = do
@@ -64,7 +65,7 @@ dbFindImages minLat maxLat minLon maxLon offset limit = do
 dbCreateImage
   :: (MonadBaseControl IO m, MonadReader r m, MonadThrow m, HasPool r)
   => ImgInfoData -> m ImgInfoKey
-dbCreateImage ImgInfo {imageFilename, imageDate, imageGeom = Geom lat lon} = do
+dbCreateImage ImgInfo {imgFilename, imgDate, imgGeom = Geom lat lon} = do
   let q =
         [sql|
           INSERT INTO image_info
@@ -73,7 +74,7 @@ dbCreateImage ImgInfo {imageFilename, imageDate, imageGeom = Geom lat lon} = do
             (?, ?, ?, ?, ST_SetSRID(ST_POINT(?, ?), 4326))
           RETURNING id
           |]
-  runDb $ querS q (imageFilename, imageDate, lat, lon, lon, lat)
+  runDb $ querS q (imgFilename, imgDate, lat, lon, lon, lat)
 
 quer
   :: (FromRow r, MonadBase IO m, ToRow q)

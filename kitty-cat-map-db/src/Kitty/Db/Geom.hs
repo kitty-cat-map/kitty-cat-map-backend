@@ -13,9 +13,10 @@ import Database.PostgreSQL.Simple.FromRow
 import Database.PostgreSQL.Simple.ToField
        (Action(Plain), ToField, toField)
 import Database.PostgreSQL.Simple.ToRow (ToRow, toRow)
+import Web.HttpApiData (FromHttpApiData)
 
 newtype Lat = Lat { unLat :: Double }
-  deriving (Eq, FromField, Num, Read, Show, ToField, ToJSON)
+  deriving (Eq, FromField, FromHttpApiData, Num, Read, Show, ToField, ToJSON)
 
 instance FromJSON Lat where
   parseJSON :: Value -> Parser Lat
@@ -33,7 +34,7 @@ mkLat lat
   | otherwise = Nothing
 
 newtype Lon = Lon { unLon :: Double }
-  deriving (Eq, FromField, Num, Read, Show, ToField, ToJSON)
+  deriving (Eq, FromField, FromHttpApiData, Num, Read, Show, ToField, ToJSON)
 
 instance FromJSON Lon where
   parseJSON :: Value -> Parser Lon

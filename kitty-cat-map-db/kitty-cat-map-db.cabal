@@ -23,6 +23,7 @@ library
   build-depends:       base-noprelude >= 4.9 && < 5
                      , aeson
                      , binary
+                     , http-api-data
                      , kitty-cat-map-base
                      , lens
                      , postgresql-simple
