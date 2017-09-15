@@ -8,7 +8,7 @@ import System.ReadEnvVar (lookupEnvDef, readEnvDef)
 import Kitty.Db
        (Connection, DbConf, HasDbConf(dbConf), HasPool(pool), PgConnStr,
         Pool, mkDbConf)
-import Kitty.Server.Img (HasImgDir(imgDir), ImgDir)
+import Kitty.Img (HasImgDir(imgDir), ImgDir)
 
 data ServerConf = ServerConf
   { serverConfDbConf :: !DbConf

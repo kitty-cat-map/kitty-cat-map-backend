@@ -1,9 +1,9 @@
+{-# LANGUAGE TemplateHaskell #-}
 
 module Kitty.Img.Conf where
 
 import Control.Lens (Lens', lens)
-import Data.Pool (Pool, createPool)
-import Database.PostgreSQL.Simple (Connection, close, connectPostgreSQL)
+import Control.Lens.TH (makeWrapped)
 
 newtype ImgDir = ImgDir { unImgDir :: FilePath }
   deriving (Eq, IsString, Read, Show)

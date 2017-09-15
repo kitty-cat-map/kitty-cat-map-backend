@@ -5,8 +5,7 @@ module Kitty.Img
   , module Kitty.Img.Conf
   ) where
 
-import Control.Lens (Lens', _Wrapped, view)
-import Control.Lens.TH (makeWrapped)
+import Control.Lens (_Wrapped, view)
 import Crypto.Hash (Digest, SHA256)
 import Crypto.Hash.Conduit (hashFile)
 import Data.Aeson.TH (defaultOptions, deriveJSON)
@@ -16,6 +15,7 @@ import System.Directory
 import System.IO (IOMode(ReadMode), withFile)
 
 import Kitty.Db (ImgFilename(ImgFilename))
+import Kitty.Img.Conf (HasImgDir(imgDir), HasImgUrl(imgUrl), ImgUrl(ImgUrl))
 
 data ImgErr
   = ImgErrHashErr
