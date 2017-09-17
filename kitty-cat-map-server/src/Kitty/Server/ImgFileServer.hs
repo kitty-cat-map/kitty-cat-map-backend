@@ -9,7 +9,7 @@ import Network.Wai.Application.Static
 import Servant (Context, HasServer(route), ServerT, runHandler)
 import qualified Servant as Servant
 import Servant.Server.Internal
-       (Delayed, Router'(RawRouter), RouteResult(Fail, FailFatal, Route),
+       (Delayed, Router'(RawRouter), RouteResult(Fail, FailFatal, Route), responseServantErr,
         runDelayed)
 import System.FilePath (addTrailingPathSeparator)
 
@@ -23,47 +23,27 @@ instance HasServer RawImg context where
     :: forall env.
        Proxy RawImg
     -> Context context
-    -- -> Delayed env (ServerT RawImg Servant.Handler)
     -> Delayed env (Servant.Handler Application)
-    -- -> Router env
-    -- -> Router' env RoutingApplication
     -> Router' env (Request -> (RouteResult Response -> IO ResponseReceived) -> IO ResponseReceived)
-  route Proxy _ rawApplication =
-    RawRouter blahblah
-    -- $ \env request respond ->
-        -- note: a Raw application doesn't register any cleanup
-        -- but for the sake of consistency, we nonetheless run
-        -- the cleanup once its done
-       -- do
-        -- r <- runDelayed {- rawApplication -} undefined env request
-        -- runAction rawApplication env request f g
-        -- liftIO $ go r request respond
+  route Proxy _ rawApplication = RawRouter go
     where
-      go :: RouteResult a -> Request -> (RouteResult Response -> IO ResponseReceived) -> IO ResponseReceived
-      go r request respond =
-        case r of
-          Route app -> untag {- app -} undefined request (respond . Route)
-          Fail a -> respond $ Fail a
-          FailFatal e -> respond $ FailFatal e
-
-      blahblah :: env -> Request -> (RouteResult Response -> IO ResponseReceived) -> IO ResponseReceived
-      blahblah env request respond = do
-        -- runAction rawApplication env request f g
-        lala <- runResourceT $ runDelayed rawApplication env request
-        papa request respond lala
-
-      papa :: Request -> (RouteResult Response -> IO ResponseReceived) -> RouteResult (Servant.Handler Application) -> IO ResponseReceived
-      papa _ respond (Fail e) = respond $ Fail e
-      papa _ respond (FailFatal e) = respond $ FailFatal e
-      papa request respond (Route handlerApp) = baba request respond handlerApp
-
-      baba :: Request -> (RouteResult Response -> IO ResponseReceived) -> Servant.Handler Application -> IO ResponseReceived
-      baba request respond handlerApp = do
-        eitherApp <- runHandler handlerApp
-        case eitherApp of
-          Left err -> respond $ Fail err
-          Right app -> app request (respond . Route)
-
+      go
+        :: env
+        -> Request
+        -> (RouteResult Response -> IO ResponseReceived)
+        -> IO ResponseReceived
+      go env request respond =
+        runResourceT $ do
+          routeRes <- runDelayed rawApplication env request
+          liftIO $
+            case routeRes of
+              (Fail e) -> respond $ Fail e
+              (FailFatal e) -> respond $ FailFatal e
+              (Route handlerApp) -> do
+                eitherApp <- runHandler handlerApp
+                case eitherApp of
+                  Left err -> respond . Route $ responseServantErr err
+                  Right app -> app request (respond . Route)
 
 rawImgServer :: (HasImgDir r, MonadReader r m) => m Application
 rawImgServer = do
