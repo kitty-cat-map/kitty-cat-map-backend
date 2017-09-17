@@ -28,6 +28,7 @@ import Kitty.Img
        (HasImgDir, HasImgUrl, ImgErr, copyImg, createImgDir,
         imgFilenameToUrl)
 import Kitty.Server.Conf (ServerConf, mkServerConfEnv, port)
+import Kitty.Server.ImgFileServer (RawImg, rawImgServer)
 
 ---------
 -- API --
@@ -35,12 +36,14 @@ import Kitty.Server.Conf (ServerConf, mkServerConfEnv, port)
 
 type Api = "v0" :> (ImgApi :<|> SearchApi)
 
-type ImgApi = "image" :> PostImage
+type ImgApi = "image" :> (PostImage :<|> GetImageFile)
 
 type PostImage =
   MultipartForm PostImgForm :>
   Throws ImgErr :>
   Post '[JSON] ImgInfoKey
+
+type GetImageFile = RawImg
 
 type SearchApi = "search" :> GetSearchImg
 
@@ -112,7 +115,7 @@ imgApi
      , MonadThrow m
      )
   => ServerT ImgApi m
-imgApi = postImage
+imgApi = postImage :<|> getImageFile
 
 postImage
   :: ( HasImgDir r
@@ -132,6 +135,9 @@ postImage PostImgForm{filename, date, geom} = do
       let imageInfo = ImgInfo () imgPath date geom
       imageId <- dbCreateImage imageInfo
       pureSuccEnvelope imageId
+
+getImageFile :: (HasImgDir r, MonadReader r m) => m Application
+getImageFile = rawImgServer
 
 searchApi
   :: (HasImgUrl r, HasPool r, MonadBaseControl IO m, MonadIO m, MonadReader r m)

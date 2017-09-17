@@ -18,6 +18,7 @@ library
   exposed-modules:     Kitty.Server
                      , Kitty.Server.Api
                      , Kitty.Server.Conf
+                     , Kitty.Server.ImgFileServer
   build-depends:       base-noprelude >= 4.9 && < 5
                      , aeson
                      , attoparsec
@@ -26,6 +27,7 @@ library
                      , cryptonite
                      , cryptonite-conduit
                      , directory
+                     , filepath
                      , http-api-data
                      , kitty-cat-map-base
                      , kitty-cat-map-db
@@ -39,6 +41,7 @@ library
                      , servant-server
                      , text
                      , wai
+                     , wai-app-static
                      , warp
   default-language:    Haskell2010
   ghc-options:         -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wmissing-import-lists
@@ -56,6 +59,7 @@ library
                      , NamedFieldPuns
                      , NoMonomorphismRestriction
                      , OverloadedStrings
+                     , PolyKinds
                      , RecordWildCards
                      , ScopedTypeVariables
                      , TupleSections

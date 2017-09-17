@@ -21,6 +21,8 @@ library
                      , classy-prelude
                      , monad-logger
                      , mtl
+                     , resourcet
+                     , tagged
   default-language:    Haskell2010
   ghc-options:         -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wmissing-import-lists
   default-extensions:  DataKinds

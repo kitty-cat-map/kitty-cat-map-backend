@@ -6,11 +6,14 @@ module Prelude
   , module Prelude
   ) where
 
-import Data.Aeson (FromJSON, ToJSON, Value, parseJSON, toJSON)
-import Data.Aeson.Types (Parser)
 import ClassyPrelude as X
 import Control.Monad.Except as X (MonadError(..), runExceptT)
 import Control.Monad.Logger
+import Control.Monad.Trans.Resource as X (ResourceT, runResourceT)
+import Data.Aeson (FromJSON, ToJSON, Value, parseJSON, toJSON)
+import Data.Aeson.Types (Parser)
+import Data.Proxy as X
+import Data.Tagged as X
 import Data.Void as X
 
 ----------
