@@ -14,7 +14,7 @@ import Servant
         serve)
 import qualified Servant as Servant
 import Servant.Checked.Exceptions
-       (Envelope, Throws, pureErrEnvelope, pureSuccEnvelope)
+       (Envelope, NoThrow, Throws, pureErrEnvelope, pureSuccEnvelope)
 import Servant.Multipart
        (FileData(fdFilePath), FromMultipart(fromMultipart),
         MultipartData(files), MultipartForm, lookupInput)
@@ -54,7 +54,7 @@ type GetSearchImg =
   Capture "minLon" Lon :>
   Capture "maxLon" Lon :>
   Capture "offset" Offset :>
-  Throws Void :>
+  NoThrow :>
   Get '[JSON] [ImgRes]
 
 ---------------------------------
@@ -146,7 +146,7 @@ searchApi = getSearchImage
 
 getSearchImage
   :: (HasImgUrl r, HasPool r, MonadBaseControl IO m, MonadIO m, MonadReader r m)
-  => Lat -> Lat -> Lon -> Lon -> Offset -> m (Envelope '[Void] [ImgRes])
+  => Lat -> Lat -> Lon -> Lon -> Offset -> m (Envelope '[] [ImgRes])
 getSearchImage minLat maxLat minLon maxLon offset = do
   imgs <- dbFindImages minLat maxLat minLon maxLon offset 20
   imgResults <- traverse imgToRes imgs
