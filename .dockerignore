@@ -19,3 +19,6 @@ cabal.sandbox.config
 
 # Ignore tags files created by vim and emacs
 TAGS
+
+# Ignore the docker stuff itself.  Don't need it in the docker image
+/docker/

@@ -22,13 +22,13 @@ RUN apk update && \
     (wget -qO- https://get.haskellstack.org/ | sh)
 
 RUN stack --no-terminal update
-RUN stack --no-terminal --resolver lts-9.2 exec -- echo downloaded resolver
+RUN stack --no-terminal --resolver lts-9.2 --system-ghc exec -- echo downloaded resolver
 
 # Create directory to use as volume when running the image.
 RUN mkdir -p /opt/kitty-cat-map-backend
 WORKDIR /opt/kitty-cat-map-backend
 COPY . /opt/kitty-cat-map-backend
 
-RUN stack --no-terminal build
+RUN stack --no-terminal --system-ghc build
 
 ENTRYPOINT ["/bin/sh", "-c" , "tail -f /dev/null"]
