@@ -1,6 +1,21 @@
 
 version: "3.3"
 services:
+    backend:
+        build:
+            context: ".."
+            dockerfile: "docker/Dockerfile-backend"
+        depends_on:
+            - "pg"
+        environment:
+            - "PORT=8090"
+        expose:
+            - "8090"
+        image: "kitty-cat-map-backend"
+        ports:
+            - "8090:8090"
+        # volumes:
+        #     - "..:/opt/kitty-cat-map-backend"
     pg:
         image: "mdillon/postgis:9.6-alpine"
         environment:

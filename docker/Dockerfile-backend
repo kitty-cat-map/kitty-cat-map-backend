@@ -1,0 +1,33 @@
+FROM alpine:3.6
+
+RUN apk update && \
+    apk add \
+        alpine-sdk \
+        bash \
+        binutils \
+        build-base \
+        ca-certificates \
+        coreutils \
+        findutils \
+        gcc \
+        gmp-dev \
+        gnupg \
+        grep \
+        libffi-dev \
+        linux-headers \
+        util-linux \
+		zlib-dev && \
+    (wget -qO- https://get.haskellstack.org/ | sh)
+
+RUN stack --no-terminal setup 8.0.2
+RUN stack --no-terminal update
+RUN stack --no-terminal --resolver lts-9.2 exec -- echo downloaded resolver
+
+# Create directory to use as volume when running the image.
+RUN mkdir -p /opt/kitty-cat-map-backend
+WORKDIR /opt/kitty-cat-map-backend
+COPY . /opt/kitty-cat-map-backend
+
+RUN stack --no-terminal build
+
+ENTRYPOINT ["/bin/sh", "-c" , "tail -f /dev/null"]
