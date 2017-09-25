@@ -10,16 +10,17 @@ RUN apk update && \
         coreutils \
         findutils \
         gcc \
+        ghc \
         gmp-dev \
         gnupg \
         grep \
         libffi-dev \
         linux-headers \
+        musl-dev \
         util-linux \
 		zlib-dev && \
     (wget -qO- https://get.haskellstack.org/ | sh)
 
-RUN stack --no-terminal setup 8.0.2
 RUN stack --no-terminal update
 RUN stack --no-terminal --resolver lts-9.2 exec -- echo downloaded resolver
 
