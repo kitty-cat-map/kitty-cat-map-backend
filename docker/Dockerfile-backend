@@ -1,5 +1,9 @@
 FROM alpine:3.6
 
+# Add "/root/.local/bin" to the PATH because that is where stack stores
+# binaries.
+ENV PATH "/root/.local/bin:$PATH"
+
 RUN apk update && \
     apk add \
         alpine-sdk \
@@ -8,6 +12,7 @@ RUN apk update && \
         build-base \
         ca-certificates \
         coreutils \
+        curl \
         findutils \
         gcc \
         ghc \
@@ -15,12 +20,13 @@ RUN apk update && \
         gnupg \
         grep \
         libffi-dev \
-        libpq \
         linux-headers \
         musl-dev \
+        postgresql-dev \
+        tree \
         util-linux \
         zlib-dev && \
-    (wget -qO- https://get.haskellstack.org/ | sh)
+    (curl https://get.haskellstack.org/ | sh)
 
 # Update stack's index.
 RUN stack --no-terminal update
@@ -30,6 +36,7 @@ RUN stack --no-terminal update
 RUN stack --no-terminal --resolver lts-9.2 --system-ghc install \
         aeson \
         attoparsec-iso8601 \
+        base-noprelude \
         binary \
         bytestring \
         classy-prelude \
@@ -59,6 +66,6 @@ RUN mkdir -p /opt/kitty-cat-map-backend
 WORKDIR /opt/kitty-cat-map-backend
 COPY . /opt/kitty-cat-map-backend
 
-RUN stack --no-terminal --system-ghc build
+RUN stack --no-terminal --system-ghc install
 
 ENTRYPOINT ["/bin/sh", "-c" , "tail -f /dev/null"]
