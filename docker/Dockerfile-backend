@@ -15,14 +15,44 @@ RUN apk update && \
         gnupg \
         grep \
         libffi-dev \
+        libpq \
         linux-headers \
         musl-dev \
         util-linux \
-		zlib-dev && \
+        zlib-dev && \
     (wget -qO- https://get.haskellstack.org/ | sh)
 
+# Update stack's index.
 RUN stack --no-terminal update
-RUN stack --no-terminal --resolver lts-9.2 --system-ghc exec -- echo downloaded resolver
+
+# Install some big packages before the COPY command so they don't have to be
+# reinstalled everytime this dockerfile is rebuilt.
+RUN stack --no-terminal --resolver lts-9.2 --system-ghc install \
+        aeson \
+        attoparsec-iso8601 \
+        binary \
+        bytestring \
+        classy-prelude \
+        cryptonite \
+        cryptonite-conduit \
+        directory \
+        filepath \
+        http-api-data \
+        lens \
+        monad-logger \
+        mtl \
+        postgresql-simple \
+        read-env-var \
+        resource-pool \
+        resourcet \
+        servant-checked-exceptions \
+        servant-multipart \
+        servant-server \
+        text \
+        transformers-base \
+        uuid \
+        wai-app-static \
+        warp
 
 # Create directory to use as volume when running the image.
 RUN mkdir -p /opt/kitty-cat-map-backend
