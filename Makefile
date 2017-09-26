@@ -1,4 +1,4 @@
-.PHONY: benchmark build clean docker-build docker-up dump-th ghci haddock haddock-server hlint install psql run tags test watch watch-test
+.PHONY: benchmark build clean docker-build docker-build-pg docker-up docker-up-pg dump-th ghci haddock haddock-server hlint install psql run tags test watch watch-test
 all: build
 
 # Run the benchmark.
@@ -17,9 +17,17 @@ clean:
 docker-build:
 	docker-compose --file docker/docker-compose.yml build
 
+# Build only the pg image defined in docker/docker-compose.yml.
+docker-build-pg:
+	docker-compose --file docker/docker-compose.yml build pg
+
 # Use docker-compose to launch all the images from docker/docker-compose.yml.
 docker-up:
 	docker-compose --file docker/docker-compose.yml up
+
+# Use docker-compose to launch only the pg image from docker/docker-compose.yml.
+docker-up-pg:
+	docker-compose --file docker/docker-compose.yml up pg
 
 # Dump template haskell splices.
 dump-th:
