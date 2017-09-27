@@ -18,7 +18,6 @@ library
   exposed-modules:     Kitty.Server
                      , Kitty.Server.Api
                      , Kitty.Server.Conf
-                     , Kitty.Server.ImgFileServer
   build-depends:       base-noprelude >= 4.9 && < 5
                      , aeson
                      , attoparsec
@@ -38,6 +37,7 @@ library
                      , servant
                      , servant-checked-exceptions
                      , servant-multipart
+                     , servant-rawm
                      , servant-server
                      , text
                      , wai

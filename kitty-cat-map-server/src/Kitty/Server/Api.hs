@@ -18,6 +18,7 @@ import Servant.Checked.Exceptions
 import Servant.Multipart
        (FileData(fdFilePath), FromMultipart(fromMultipart),
         MultipartData(files), MultipartForm, lookupInput)
+import Servant.RawM (RawM, serveDirectoryWebApp)
 import Servant.Utils.Enter ((:~>)(NT), enter)
 
 import Kitty.Db
@@ -25,10 +26,9 @@ import Kitty.Db
         ImgInfo'(ImgInfo, imgId, imgFilename, imgDate, imgGeom), ImgInfoKey,
         Lat, Lon, Offset, dbCreateImage, dbFindImages, mkLat, mkLon)
 import Kitty.Img
-       (HasImgDir, HasImgUrl, ImgErr, copyImg, createImgDir,
-        imgFilenameToUrl)
+       (HasImgDir, HasImgUrl, ImgDir(ImgDir), ImgErr, copyImg,
+        createImgDir, imgDir, imgFilenameToUrl)
 import Kitty.Server.Conf (ServerConf, mkServerConfEnv, port)
-import Kitty.Server.ImgFileServer (RawImg, rawImgServer)
 
 ---------
 -- API --
@@ -43,7 +43,7 @@ type PostImage =
   Throws ImgErr :>
   Post '[JSON] ImgInfoKey
 
-type GetImageFile = RawImg
+type GetImageFile = RawM
 
 type SearchApi = "search" :> GetSearchImg
 
@@ -137,7 +137,9 @@ postImage PostImgForm{filename, date, geom} = do
       pureSuccEnvelope imageId
 
 getImageFile :: (HasImgDir r, MonadReader r m) => m Application
-getImageFile = rawImgServer
+getImageFile = do
+  ImgDir dir <- view imgDir
+  serveDirectoryWebApp dir
 
 searchApi
   :: (HasImgUrl r, HasPool r, MonadBaseControl IO m, MonadIO m, MonadReader r m)
