@@ -9,13 +9,20 @@ services:
             - "pg"
         environment:
             - "PORT=8090"
+            - "KITTY_DB_CONN_STR=postgres://kitty-cat-map:foobar@pg:5432/kitty-cat-map"
+            - "KITTY_IMG_DIR=/var/lib/kitty-cat-map/images"
         expose:
             - "8090"
         image: "kitty-cat-map-backend"
         ports:
             - "8090:8090"
-        # volumes:
-        #     - "..:/opt/kitty-cat-map-backend"
+        volumes:
+            - type: volume
+              source: images
+              target: "/var/lib/kitty-cat-map/images"
+              read_only: false
+              volume:
+                nocopy: true
     pg:
         image: "mdillon/postgis:9.6-alpine"
         environment:
@@ -35,4 +42,7 @@ services:
             - "5432:5432"
 
 volumes:
+  # This holds the database files for PostgreSQL.
   db:
+  # This holds the images uploaded by the users.
+  images:
