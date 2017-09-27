@@ -33,7 +33,7 @@ RUN stack --no-terminal update
 
 # Install some big packages before the COPY command so they don't have to be
 # reinstalled everytime this dockerfile is rebuilt.
-RUN stack --no-terminal --resolver lts-9.2 --system-ghc install \
+RUN stack --no-terminal --resolver lts-9.6 --system-ghc install \
         aeson \
         attoparsec-iso8601 \
         base-noprelude \
