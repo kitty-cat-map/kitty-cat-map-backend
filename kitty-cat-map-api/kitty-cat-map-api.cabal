@@ -19,6 +19,11 @@ library
                      , Kitty.Api.Types
   build-depends:       base-noprelude >= 4.9 && < 5
                      , aeson
+                     , attoparsec
+                     , attoparsec-iso8601
+                     , kitty-cat-map-base
+                     , kitty-cat-map-db
+                     , kitty-cat-map-img
                      , servant
                      , servant-checked-exceptions
                      , servant-multipart

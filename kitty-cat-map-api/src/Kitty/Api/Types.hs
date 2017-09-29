@@ -2,33 +2,14 @@
 
 module Kitty.Api.Types where
 
-import Control.Lens (view)
 import Data.Aeson.TH (defaultOptions, deriveJSON)
 import Data.Attoparsec.Text (maybeResult, parse)
 import Data.Attoparsec.Time (utcTime)
-import Data.Proxy (Proxy(Proxy))
-import Network.Wai (Application)
-import Network.Wai.Handler.Warp (run)
-import Servant
-       (Capture, Get, JSON, Post, Server, ServerT, (:>), (:<|>)((:<|>)),
-        serve)
-import qualified Servant as Servant
-import Servant.Checked.Exceptions
-       (Envelope, NoThrow, Throws, pureErrEnvelope, pureSuccEnvelope)
 import Servant.Multipart
        (FileData(fdFilePath), FromMultipart(fromMultipart),
-        MultipartData(files), MultipartForm, lookupInput)
-import Servant.RawM (RawM, serveDirectoryWebApp)
-import Servant.Utils.Enter ((:~>)(NT), enter)
+        MultipartData(files), lookupInput)
 
-import Kitty.Db
-       (Geom(Geom), HasPool, ImgInfo,
-        ImgInfo'(ImgInfo, imgId, imgFilename, imgDate, imgGeom), ImgInfoKey,
-        Lat, Lon, Offset, dbCreateImage, dbFindImages, mkLat, mkLon)
-import Kitty.Img
-       (HasImgDir, HasImgUrl, ImgDir(ImgDir), ImgErr, copyImg,
-        createImgDir, imgDir, imgFilenameToUrl)
-import Kitty.Server.Conf (ServerConf, mkServerConfEnv, port)
+import Kitty.Db (Geom(Geom), ImgInfoKey, mkLat, mkLon)
 
 data PostImgForm = PostImgForm
   { filename :: FilePath
