@@ -60,22 +60,27 @@ instance ToSample ImgErr where
     , ("Error when trying to copy the temporary file to the images directory.", ImgErrCouldNotCopy)
     ]
 
-sampleImgInfoKey :: ImgInfoKey
-sampleImgInfoKey =
+sampleImgInfoKey1 :: ImgInfoKey
+sampleImgInfoKey1 =
   ImgInfoKey . fromJust $ UUID.fromString "0359141a-9ce8-4ca9-b93c-d9d017ece471"
+
+sampleImgInfoKey2 :: ImgInfoKey
+sampleImgInfoKey2 =
+  ImgInfoKey . fromJust $ UUID.fromString "63f1f6d9-4cbe-4b49-a57a-54356defb55c"
 
 instance ToSample ImgInfoKey where
   toSamples :: Proxy ImgInfoKey -> [(Text, ImgInfoKey)]
-  toSamples _ = [("sample uuid key", sampleImgInfoKey)]
+  toSamples _ = [("sample uuid key", sampleImgInfoKey1)]
 
 instance ToSample ImgRes where
   toSamples :: Proxy ImgRes -> [(Text, ImgRes)]
   toSamples _ =
-    [ ( "sample image"
+    [ ( "sample image 1"
       , ImgRes
-        { id = sampleImgInfoKey
+        { id = sampleImgInfoKey1
         , url =
-          "http://localhost:8090/image/60475399b11663a107b06a188a795a1e02387535933bd9f5318fa01a1593a6d1.jpg"
+          "http://localhost:8090/image/" <>
+          "60475399b11663a107b06a188a795a1e02387535933bd9f5318fa01a1593a6d1.jpg"
         , date =
           parseTimeOrError
             True
@@ -85,8 +90,22 @@ instance ToSample ImgRes where
         , geom = unsafeMkGeom 20 (-130)
         }
       )
+    , ( "sample image 2"
+      , ImgRes
+        { id = sampleImgInfoKey2
+        , url =
+          "http://localhost:8090/image/" <>
+          "1f63769f83fe0721f05cd410fccea76870ad60d12fedd6b41ee78da8989edbd8.jpg"
+        , date =
+          parseTimeOrError
+            True
+            defaultTimeLocale
+            (iso8601DateFormat (Just "%H:%M:%S"))
+            ("2016-05-01T10:11:11")
+        , geom = unsafeMkGeom (-80) (-160)
+        }
+      )
     ]
-
 
 defaultMain :: IO ()
 defaultMain = putStrLn . pack . markdown $ docs (Proxy :: Proxy Api)
