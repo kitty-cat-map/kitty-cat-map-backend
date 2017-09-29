@@ -39,6 +39,7 @@ packages:
     - ./kitty-cat-map-api
     - ./kitty-cat-map-base
     - ./kitty-cat-map-db
+    - ./kitty-cat-map-doc
     - ./kitty-cat-map-img
     - ./kitty-cat-map-server
     - .
