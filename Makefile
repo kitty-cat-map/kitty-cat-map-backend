@@ -1,4 +1,4 @@
-.PHONY: benchmark build clean docker-build docker-build-pg docker-up docker-up-pg dump-th ghci haddock haddock-server hlint install psql run tags test watch watch-test
+.PHONY: benchmark build clean doc docker-build docker-build-pg docker-up docker-up-pg dump-th ghci haddock haddock-server hlint install psql run tags test watch watch-test
 all: build
 
 # Run the benchmark.
@@ -12,6 +12,10 @@ build:
 # Clean up the built packages.
 clean:
 	stack clean
+
+# Create the documentation.
+doc: build
+	stack exec -- kitty-cat-map-doc
 
 # Build all the images defined in docker/docker-compose.yml.
 docker-build:
@@ -67,7 +71,7 @@ psql:
 
 # Run the server.
 run: build
-	stack exec -- kitty-cat-map-exe
+	stack exec -- kitty-cat-map-server
 
 # Create a TAGS file for use in emacs or vim.
 tags:
