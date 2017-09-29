@@ -13,13 +13,41 @@ build-type:          Simple
 extra-source-files:  README.md
 cabal-version:       >=1.10
 
-executable kitty-cat-map-exe
+executable kitty-cat-map-server
   hs-source-dirs:      app
-  main-is:             Main.hs
+  main-is:             Server.hs
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wmissing-import-lists
   build-depends:       base-noprelude >= 4.9 && < 5
                      , kitty-cat-map-base
                      , kitty-cat-map-server
+  default-language:    Haskell2010
+  default-extensions:  DataKinds
+                     , DeriveDataTypeable
+                     , DeriveGeneric
+                     , EmptyDataDecls
+                     , FlexibleContexts
+                     , FlexibleInstances
+                     , GADTs
+                     , GeneralizedNewtypeDeriving
+                     , InstanceSigs
+                     , MultiParamTypeClasses
+                     , NamedFieldPuns
+                     , NoMonomorphismRestriction
+                     , OverloadedStrings
+                     , RecordWildCards
+                     , ScopedTypeVariables
+                     , TupleSections
+                     , TypeFamilies
+                     , TypeOperators
+                     , ViewPatterns
+
+executable kitty-cat-map-doc
+  hs-source-dirs:      app
+  main-is:             Doc.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wmissing-import-lists
+  build-depends:       base-noprelude >= 4.9 && < 5
+                     , kitty-cat-map-base
+                     , kitty-cat-map-doc
   default-language:    Haskell2010
   default-extensions:  DataKinds
                      , DeriveDataTypeable
