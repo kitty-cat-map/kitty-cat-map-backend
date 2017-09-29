@@ -7,6 +7,7 @@ import Data.Aeson
         withObject)
 import Data.Aeson.Types (Parser)
 import qualified Data.Binary.Builder as Binary
+import Data.Maybe (fromJust)
 import Database.PostgreSQL.Simple.FromField (FromField)
 import Database.PostgreSQL.Simple.FromRow
        (FromRow, RowParser, field, fromRow)
@@ -33,6 +34,9 @@ mkLat lat
   | lat >= latMin && lat <= latMax = Just $ Lat lat
   | otherwise = Nothing
 
+unsafeMkLat :: Double -> Lat
+unsafeMkLat = fromJust . mkLat
+
 newtype Lon = Lon { unLon :: Double }
   deriving (Eq, FromField, FromHttpApiData, Num, Read, Show, ToField, ToJSON)
 
@@ -51,10 +55,25 @@ mkLon lon
   | lon >= lonMin && lon <= lonMax = Just $ Lon lon
   | otherwise = Nothing
 
+unsafeMkLon :: Double -> Lon
+unsafeMkLon = fromJust . mkLon
+
 data Geom = Geom
   { geomLat :: {-# UNPACK #-}!Lat
   , geomLon :: {-# UNPACK #-}!Lon
   } deriving (Eq, Read, Show)
+
+mkGeom
+  :: Double -- ^ latitude
+  -> Double -- ^ longitude
+  -> Maybe Geom
+mkGeom lat lon = Geom <$> mkLat lat <*> mkLon lon
+
+unsafeMkGeom
+  :: Double -- ^ latitude
+  -> Double -- ^ longitude
+  -> Geom
+unsafeMkGeom lat lon = Geom (unsafeMkLat lat) (unsafeMkLon lon)
 
 instance FromRow Geom where
   fromRow :: RowParser Geom
