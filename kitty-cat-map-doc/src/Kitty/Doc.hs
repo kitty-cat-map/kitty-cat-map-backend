@@ -12,7 +12,6 @@ import Servant.Docs
         HasDocs(docsFor), ToCapture(toCapture), ToSample(toSamples), docs,
         markdown, single)
 import Servant.Multipart (MultipartForm)
-import Servant.RawM (RawM)
 
 import Kitty.Api
        (Api, ImgRes(ImgRes, id, url, date, geom),
@@ -22,13 +21,8 @@ import Kitty.Img
        (ImgErr(ImgErrHashErr, ImgErrImgTypeErr, ImgErrNotImg,
                ImgErrCouldNotCopy))
 
-
 instance HasDocs api => HasDocs (MultipartForm PostImgForm :> api) where
   docsFor :: Proxy (MultipartForm PostImgForm :> api) -> (Endpoint, Action) -> DocOptions -> API
-  docsFor _ (endpoint, action) _ = single endpoint action -- undefined
-
-instance HasDocs RawM where
-  docsFor :: Proxy RawM -> (Endpoint, Action) -> DocOptions -> API
   docsFor _ (endpoint, action) _ = single endpoint action -- undefined
 
 instance ToCapture (Capture "maxLat" Lat) where
