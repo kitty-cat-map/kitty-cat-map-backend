@@ -10,20 +10,47 @@ import Servant.API (Capture, (:>))
 import Servant.Docs
        (API, Action, DocCapture(DocCapture), DocOptions, Endpoint,
         HasDocs(docsFor), ToCapture(toCapture), ToSample(toSamples), docs,
-        markdown, single)
-import Servant.Multipart (MultipartForm)
+        markdown)
+import Servant.Multipart (MultipartData(MultipartData), MultipartForm)
 
 import Kitty.Api
        (Api, ImgRes(ImgRes, id, url, date, geom),
-        PostImgForm)
+        PostImgForm(PostImgForm, filename, date, geom))
 import Kitty.Db (ImgInfoKey(ImgInfoKey), Lat, Lon, Offset, unsafeMkGeom)
 import Kitty.Img
        (ImgErr(ImgErrHashErr, ImgErrImgTypeErr, ImgErrNotImg,
                ImgErrCouldNotCopy))
 
+class ToMultipartSample a where
+  toMultipartSample :: a -> [(Text, MultipartData)]
+
+instance ToMultipartSample PostImgForm where
+  toMultipartSample :: PostImgForm -> [(Text, MultipartData)]
+  toMultipartSample PostImgForm{filename, date, geom} =
+    undefined
+
 instance HasDocs api => HasDocs (MultipartForm PostImgForm :> api) where
-  docsFor :: Proxy (MultipartForm PostImgForm :> api) -> (Endpoint, Action) -> DocOptions -> API
-  docsFor _ (endpoint, action) _ = single endpoint action -- undefined
+  docsFor
+    :: Proxy (MultipartForm PostImgForm :> api)
+    -> (Endpoint, Action)
+    -> DocOptions
+    -> API
+  docsFor _ (endpoint, action) opts =
+    let newAction = action
+    in docsFor (Proxy :: Proxy api) (endpoint, newAction) opts
+
+-- instance (ToSample a, AllMimeRender (ct ': cts) a, HasDocs api)
+--       => HasDocs (ReqBody (ct ': cts) a :> api) where
+
+--   docsFor Proxy (endpoint, action) opts@DocOptions{..} =
+--     docsFor subApiP (endpoint, action') opts
+
+--     where subApiP = Proxy :: Proxy api
+--           action' :: Action
+--           action' = action & rqbody .~ take _maxSamples (sampleByteStrings t p)
+--                            & rqtypes .~ allMime t
+--           t = Proxy :: Proxy (ct ': cts)
+--           p = Proxy :: Proxy a
 
 instance ToCapture (Capture "maxLat" Lat) where
   toCapture :: Proxy (Capture "maxLat" Lat) -> DocCapture
