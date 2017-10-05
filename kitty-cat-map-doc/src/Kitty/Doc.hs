@@ -3,31 +3,80 @@
 
 module Kitty.Doc where
 
+import Control.Lens ((<>~), view)
 import Data.Maybe (fromJust)
+import Data.Function ((&))
 import Data.Time.Format (iso8601DateFormat, parseTimeOrError)
 import qualified Data.UUID as UUID
 import Servant.API (Capture, (:>))
 import Servant.Docs
-       (API, Action, DocCapture(DocCapture), DocOptions, Endpoint,
-        HasDocs(docsFor), ToCapture(toCapture), ToSample(toSamples), docs,
-        markdown)
-import Servant.Multipart (MultipartData(MultipartData), MultipartForm)
+       (API, Action, DocCapture(DocCapture), DocNote(DocNote),
+        DocOptions, Endpoint, HasDocs(docsFor),
+        ToCapture(toCapture), ToSample(toSamples), docs, markdown,
+        maxSamples, notes)
+import Servant.Multipart
+       (FileData(FileData), Input(Input), MultipartData(MultipartData),
+        MultipartForm)
 
 import Kitty.Api
-       (Api, ImgRes(ImgRes, id, url, date, geom),
-        PostImgForm(PostImgForm, filename, date, geom))
+       (Api, ImgRes(ImgRes, id, url, date, geom), PostImgForm)
 import Kitty.Db (ImgInfoKey(ImgInfoKey), Lat, Lon, Offset, unsafeMkGeom)
 import Kitty.Img
        (ImgErr(ImgErrHashErr, ImgErrImgTypeErr, ImgErrNotImg,
                ImgErrCouldNotCopy))
 
 class ToMultipartSample a where
-  toMultipartSample :: a -> [(Text, MultipartData)]
+  toMultipartSamples :: Proxy a -> [(Text, MultipartData)]
 
 instance ToMultipartSample PostImgForm where
-  toMultipartSample :: PostImgForm -> [(Text, MultipartData)]
-  toMultipartSample PostImgForm{filename, date, geom} =
-    undefined
+  toMultipartSamples :: Proxy PostImgForm -> [(Text, MultipartData)]
+  toMultipartSamples Proxy =
+    [ ( "normal image upload"
+      , MultipartData
+          [ Input "date" "2017-09-10 08:23 Z"
+          , Input "lat" "-33"
+          , Input "lon" "-100"
+          ]
+          [ FileData
+              "file"
+              "temp-cat-image.jpg"
+              "image/jpeg"
+              "/tmp/tmppath.file"
+          ]
+      )
+    ]
+
+multipartInputToItem :: Input -> Text
+multipartInputToItem (Input name val) =
+  "        -   *" <> name <> "*: " <> "`" <> val <> "`"
+
+multipartFileToItem :: FileData -> Text
+multipartFileToItem (FileData name _ contentType _) =
+  "        -   *" <> name <> "*, content-type: " <> "`" <> contentType <> "`"
+
+multipartSampleToDesc :: (Text, MultipartData) -> [Text]
+multipartSampleToDesc (desc, MultipartData inputs files) =
+  [ "-   " <> desc
+  , "    -   textual inputs:"
+  ] <>
+  fmap multipartInputToItem inputs <>
+  [ "    -   file inputs:" ] <>
+  fmap multipartFileToItem files
+
+
+toMultipartDescriptions :: ToMultipartSample a => Proxy a -> [[Text]]
+toMultipartDescriptions proxy =
+  fmap multipartSampleToDesc (toMultipartSamples proxy)
+
+toMultipartNotes :: ToMultipartSample a => Int -> Proxy a -> DocNote
+toMultipartNotes maxSamples' proxy =
+  let sampleLines = take maxSamples' $ toMultipartDescriptions proxy
+      body =
+        [ "This endpoint takes multipart/form-data requests.  The following are sample "
+        , "requests:"
+        , ""
+        ] <> fold sampleLines
+  in DocNote "Multipart Request Samples" $ fmap unpack body
 
 instance HasDocs api => HasDocs (MultipartForm PostImgForm :> api) where
   docsFor
@@ -36,7 +85,13 @@ instance HasDocs api => HasDocs (MultipartForm PostImgForm :> api) where
     -> DocOptions
     -> API
   docsFor _ (endpoint, action) opts =
-    let newAction = action
+    let newAction =
+          action
+            & notes <>~
+                [ toMultipartNotes
+                    (view maxSamples opts)
+                    (Proxy :: Proxy PostImgForm)
+                ]
     in docsFor (Proxy :: Proxy api) (endpoint, newAction) opts
 
 -- instance (ToSample a, AllMimeRender (ct ': cts) a, HasDocs api)

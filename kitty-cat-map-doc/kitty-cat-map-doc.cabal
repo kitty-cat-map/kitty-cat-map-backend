@@ -21,6 +21,7 @@ library
                      , kitty-cat-map-base
                      , kitty-cat-map-db
                      , kitty-cat-map-img
+                     , lens
                      , servant
                      , servant-docs
                      , servant-checked-exceptions
