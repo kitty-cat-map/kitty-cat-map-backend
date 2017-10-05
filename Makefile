@@ -67,7 +67,7 @@ install:
 
 # Run psql and connect to the kitty-cat-map database.
 psql:
-	PGPASSWORD=foobar psql -U kitty-cat-map -d kitty-cat-map -h 127.0.0.1
+	PGPASSWORD=foobar psql --username kitty-cat-map --dbname kitty-cat-map --host 127.0.0.1 --port 5532
 
 # Run the server.
 run: build
