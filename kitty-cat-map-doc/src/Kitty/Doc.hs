@@ -88,9 +88,9 @@ toMultipartNotes maxSamples' proxy =
         ]
   in DocNote "Multipart Request Samples" $ fmap unpack body
 
-instance HasDocs api => HasDocs (MultipartForm PostImgForm :> api) where
+instance (HasDocs api, ToMultipartSample a) => HasDocs (MultipartForm a :> api) where
   docsFor
-    :: Proxy (MultipartForm PostImgForm :> api)
+    :: Proxy (MultipartForm a :> api)
     -> (Endpoint, Action)
     -> DocOptions
     -> API
@@ -100,22 +100,9 @@ instance HasDocs api => HasDocs (MultipartForm PostImgForm :> api) where
             & notes <>~
                 [ toMultipartNotes
                     (view maxSamples opts)
-                    (Proxy :: Proxy PostImgForm)
+                    (Proxy :: Proxy a)
                 ]
     in docsFor (Proxy :: Proxy api) (endpoint, newAction) opts
-
--- instance (ToSample a, AllMimeRender (ct ': cts) a, HasDocs api)
---       => HasDocs (ReqBody (ct ': cts) a :> api) where
-
---   docsFor Proxy (endpoint, action) opts@DocOptions{..} =
---     docsFor subApiP (endpoint, action') opts
-
---     where subApiP = Proxy :: Proxy api
---           action' :: Action
---           action' = action & rqbody .~ take _maxSamples (sampleByteStrings t p)
---                            & rqtypes .~ allMime t
---           t = Proxy :: Proxy (ct ': cts)
---           p = Proxy :: Proxy a
 
 instance ToCapture (Capture "maxLat" Lat) where
   toCapture :: Proxy (Capture "maxLat" Lat) -> DocCapture
