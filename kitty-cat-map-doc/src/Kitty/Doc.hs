@@ -44,38 +44,48 @@ instance ToMultipartSample PostImgForm where
               "/tmp/tmppath.file"
           ]
       )
+    , ( "upload sample 2"
+      , MultipartData
+          [ Input "date" "2017-08-22 13:23 Z"
+          , Input "lat" "50"
+          , Input "lon" "150"
+          ]
+          [ FileData
+              "file"
+              ""
+              "image/jpeg"
+              ""
+          ]
+      )
     ]
 
 multipartInputToItem :: Input -> Text
 multipartInputToItem (Input name val) =
-  "        -   *" <> name <> "*: " <> "`" <> val <> "`"
+  "        - *" <> name <> "*: " <> "`" <> val <> "`"
 
 multipartFileToItem :: FileData -> Text
 multipartFileToItem (FileData name _ contentType _) =
-  "        -   *" <> name <> "*, content-type: " <> "`" <> contentType <> "`"
+  "        - *" <> name <> "*, content-type: " <> "`" <> contentType <> "`"
 
-multipartSampleToDesc :: (Text, MultipartData) -> [Text]
+multipartSampleToDesc :: (Text, MultipartData) -> Text
 multipartSampleToDesc (desc, MultipartData inputs files) =
-  [ "-   " <> desc
-  , "    -   textual inputs:"
-  ] <>
-  fmap multipartInputToItem inputs <>
-  [ "    -   file inputs:" ] <>
-  fmap multipartFileToItem files
+  "- " <> desc <> "\n" <>
+  "    - textual inputs (any `<input>` type but file):\n" <>
+  foldMap (\input -> multipartInputToItem input <> "\n") inputs <>
+  "    - file inputs (any HTML input that looks like `<input type=\"file\" name=\"somefile\" />`):\n" <>
+  foldMap (\file -> multipartFileToItem file <> "\n") files
 
-
-toMultipartDescriptions :: ToMultipartSample a => Proxy a -> [[Text]]
-toMultipartDescriptions proxy =
-  fmap multipartSampleToDesc (toMultipartSamples proxy)
+toMultipartDescriptions :: ToMultipartSample a => Proxy a -> [Text]
+toMultipartDescriptions = fmap multipartSampleToDesc . toMultipartSamples
 
 toMultipartNotes :: ToMultipartSample a => Int -> Proxy a -> DocNote
 toMultipartNotes maxSamples' proxy =
   let sampleLines = take maxSamples' $ toMultipartDescriptions proxy
       body =
-        [ "This endpoint takes multipart/form-data requests.  The following are sample "
-        , "requests:"
-        , ""
-        ] <> fold sampleLines
+        [ "This endpoint takes `multipart/form-data` requests.  The following is " <>
+          "a list of sample requests:"
+        , foldMap (<> "\n") sampleLines
+        ]
   in DocNote "Multipart Request Samples" $ fmap unpack body
 
 instance HasDocs api => HasDocs (MultipartForm PostImgForm :> api) where
