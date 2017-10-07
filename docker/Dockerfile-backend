@@ -1,39 +1,35 @@
-FROM alpine:3.6
+FROM debian:9.1
+
+ENV RESOLVER "lts-9.6"
 
 # Add "/root/.local/bin" to the PATH because that is where stack stores
 # binaries.
 ENV PATH "/root/.local/bin:$PATH"
 
-RUN apk update && \
-    apk add \
-        alpine-sdk \
+RUN apt-get update && \
+    apt-get install -y \
         bash \
         binutils \
-        build-base \
         ca-certificates \
         coreutils \
         curl \
-        findutils \
         gcc \
-        ghc \
-        gmp-dev \
         gnupg \
         grep \
-        libffi-dev \
-        linux-headers \
-        musl-dev \
-        postgresql-dev \
+        libpq-dev \
         tree \
-        util-linux \
-        zlib-dev && \
+        zlib1g-dev && \
     (curl https://get.haskellstack.org/ | sh)
 
 # Update stack's index.
 RUN stack --no-terminal update
 
+# Install GHC for resolver.
+RUN stack --no-terminal --resolver "$RESOLVER" setup
+
 # Install some big packages before the COPY command so they don't have to be
 # reinstalled everytime this dockerfile is rebuilt.
-RUN stack --no-terminal --resolver lts-9.6 --system-ghc install \
+RUN stack --no-terminal --resolver "$RESOLVER" install \
         aeson \
         attoparsec-iso8601 \
         base-noprelude \
@@ -66,6 +62,6 @@ RUN mkdir -p /opt/kitty-cat-map-backend
 WORKDIR /opt/kitty-cat-map-backend
 COPY . /opt/kitty-cat-map-backend
 
-RUN stack --no-terminal --system-ghc install
+RUN stack --no-terminal install
 
 ENTRYPOINT ["/bin/sh", "-c" , "/root/.local/bin/kitty-cat-map-server ; tail -f /dev/null"]
