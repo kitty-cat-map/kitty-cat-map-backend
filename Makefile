@@ -6,7 +6,7 @@ benchmark:
 	stack bench
 
 # Build the executables.
-build: 
+build:
 	stack build
 
 # Clean up the built packages.
@@ -24,6 +24,10 @@ docker-build:
 # Build only the pg image defined in docker/docker-compose.yml.
 docker-build-pg:
 	docker-compose --file docker/docker-compose.yml build pg
+
+# Use docker to build the API documentation.
+docker-doc:
+	docker-compose --file docker/docker-compose.yml run backend /root/.local/bin/kitty-cat-map-doc
 
 # Use docker-compose to launch all the images from docker/docker-compose.yml.
 docker-up:

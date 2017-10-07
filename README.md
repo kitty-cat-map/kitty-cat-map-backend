@@ -43,6 +43,9 @@ the backend itself.
 $ make docker-build
 ```
 
+If the Haskell code for the backend changes, this command must be rerun to
+create a new docker container that has the changes.
+
 #### Run
 
 The following command will use `docker-compose` to run the two Docker

@@ -68,4 +68,4 @@ COPY . /opt/kitty-cat-map-backend
 
 RUN stack --no-terminal --system-ghc install
 
-ENTRYPOINT ["/bin/sh", "-c" , "tail -f /dev/null"]
+ENTRYPOINT ["/bin/sh", "-c" , "/root/.local/bin/kitty-cat-map-server ; tail -f /dev/null"]
