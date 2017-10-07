@@ -27,7 +27,7 @@ docker-build-pg:
 
 # Use docker to build the API documentation.
 docker-doc:
-	docker-compose --file docker/docker-compose.yml run backend /root/.local/bin/kitty-cat-map-doc
+	docker-compose --file docker/docker-compose.yml run --no-deps --entrypoint '/bin/sh -c' backend /root/.local/bin/kitty-cat-map-doc
 
 # Use docker-compose to launch all the images from docker/docker-compose.yml.
 docker-up:
