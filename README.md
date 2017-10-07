@@ -3,10 +3,6 @@
 This is the repository for the backend of Kitty Cat Map (ねこねこマップ). This
 README lists the instructions for building and running locally.
 
-## Development Environment Setup
-
-
-
 ## Running Locally
 
 There are two different ways to run the backend of Kitty Cat Map locally.
@@ -71,7 +67,7 @@ This section describes how to use `stack` to build the backend locally.
     systems, these development libraries are usually in a package called
     something like `libpg` or `postgres-dev`. On other systems they may be
     called something else.
-    
+
 #### Build
 
 The following command will use `stack` to build the backend:
@@ -113,7 +109,7 @@ Here are some examples of using `curl` to access the backend:
         --form 'lon=-100' \
         'http://localhost:8090/v0/image'
     ```
-    
+
     In order to run this, you need a file in current directory called
     `temp-cat-image.jpg`.
 
@@ -121,15 +117,15 @@ Here are some examples of using `curl` to access the backend:
 
     This endpoint allows you to search for images within a given min/max
     latitude and logitude.
-    
+
     ```sh
     $ curl 'http://localhost:8090/v0/search/image/-40/0/-120/0/0'
     ```
-    
+
 -   *get an image*
 
     This endpoint will allow you to download an existing image.
-    
+
     ```sh
     $ curl --output 'cat-image.jpg' \
         'http://localhost:8090/v0/image/60475399b11663a107b06a188a795a1e02387535933bd9f5318fa01a1593a6d1.jpg'
