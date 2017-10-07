@@ -1,0 +1,55 @@
+- package:
+  - name: kitty-cat-map
+  - section:
+    - name: exe:kitty-cat-map-doc
+    - message:
+      - name: Redundant build-depends entry
+      - depends: base-noprelude
+  - section:
+    - name: exe:kitty-cat-map-server
+    - message:
+      - name: Redundant build-depends entry
+      - depends: base-noprelude
+- package:
+  - name: kitty-cat-map-api
+  - section:
+    - name: library
+    - message:
+      - name: Redundant build-depends entry
+      - depends: base-noprelude
+- package:
+  - name: kitty-cat-map-base
+  - section:
+    - name: library
+    - message:
+      - name: Redundant build-depends entry
+      - depends: base-noprelude
+- package:
+  - name: kitty-cat-map-db
+  - section:
+    - name: library
+    - message:
+      - name: Redundant build-depends entry
+      - depends: base-noprelude
+- package:
+  - name: kitty-cat-map-doc
+  - section:
+    - name: library
+    - message:
+      - name: Redundant build-depends entry
+      - depends: base-noprelude
+- package:
+  - name: kitty-cat-map-img
+  - section:
+    - name: library
+    - message:
+      - name: Redundant build-depends entry
+      - depends: base-noprelude
+- package:
+  - name: kitty-cat-map-server
+  - section:
+    - name: library
+    - message:
+      - name: Redundant build-depends entry
+      - depends: base-noprelude
+
