@@ -24,9 +24,7 @@ library
                      , lens
                      , servant
                      , servant-docs
-                     , servant-checked-exceptions
                      , servant-multipart
-                     , servant-rawm
                      , time
                      , uuid
   default-language:    Haskell2010

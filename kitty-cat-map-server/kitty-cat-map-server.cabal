@@ -19,15 +19,6 @@ library
                      , Kitty.Server.Handler
                      , Kitty.Server.Conf
   build-depends:       base-noprelude >= 4.9 && < 5
-                     , aeson
-                     , attoparsec
-                     , attoparsec-iso8601
-                     , bytestring
-                     , cryptonite
-                     , cryptonite-conduit
-                     , directory
-                     , filepath
-                     , http-api-data
                      , kitty-cat-map-api
                      , kitty-cat-map-base
                      , kitty-cat-map-db
@@ -37,12 +28,9 @@ library
                      , read-env-var
                      , servant
                      , servant-checked-exceptions
-                     , servant-multipart
                      , servant-rawm
                      , servant-server
-                     , text
                      , wai
-                     , wai-app-static
                      , warp
   default-language:    Haskell2010
   ghc-options:         -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wmissing-import-lists
