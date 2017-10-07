@@ -65,7 +65,7 @@ This section describes how to use `stack` to build the backend locally.
 
 3.  Install development libraries for PostgreSQL on your system. On Linux
     systems, these development libraries are usually in a package called
-    something like `libpg` or `postgres-dev`. On other systems they may be
+    something like `libpq-dev` or `postgres-dev`. On other systems they may be
     called something else.
 
 #### Build
